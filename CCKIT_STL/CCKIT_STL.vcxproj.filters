@@ -51,6 +51,15 @@
     <ClInclude Include="CCKIT\internal\afx_config.h">
       <Filter>Header Files\CCKIT\internal</Filter>
     </ClInclude>
+    <ClInclude Include="CCKIT\memory.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\stack.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\static_assert.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

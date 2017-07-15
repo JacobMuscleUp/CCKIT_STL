@@ -162,13 +162,14 @@ namespace cckit
 	public:
 		list();
 		list(const allocator_type& _allocator);
-		explicit list(size_type _size, const allocator_type& _allocator = CCKIT_DEFAULT_ALLOCATOR);
-		list(size_type _size, const value_type& _val, const allocator_type& _allocator = CCKIT_DEFAULT_ALLOCATOR);
+		explicit list(size_type _size, const allocator_type& _allocator = allocator_type());
+		list(size_type _size, const value_type& _val, const allocator_type& _allocator = allocator_type());
 		list(const this_type& _src);
 		list(const this_type& _src, const allocator_type& _allocator);
 		list(this_type&& _src);
 		list(this_type&& _src, const allocator_type& _allocator);
-		list(std::initializer_list<value_type> _ilist, const allocator_type& _allocator = CCKIT_DEFAULT_ALLOCATOR);
+
+		list(std::initializer_list<value_type> _ilist, const allocator_type& _allocator = allocator_type());
 		template <typename InputIterator
 			, typename = typename enable_if_t<is_iterator<InputIterator>::value> >
 		list(InputIterator _first, InputIterator _last);

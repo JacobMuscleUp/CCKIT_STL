@@ -6,6 +6,12 @@
 
 namespace cckit
 {
+	namespace detail
+	{
+		typedef char NoType;
+		class YesType { NoType unnamed[2]; };
+	}
+
 #pragma region integral_constant
 	template <typename T, T Val>
 	struct integral_constant
@@ -67,6 +73,43 @@ namespace cckit
 	template<typename T>
 	struct is_same<T, T> : public true_type { };
 #pragma endregion is_same
+
+#pragma region is_void
+	template<typename T>
+	struct IsVoid
+	{
+		enum {
+			value =
+			is_same<T, void>::value ||
+			is_same<T, const void>::value ||
+			is_same<T, volatile void>::value ||
+			is_same<T, const volatile void>::value
+		};
+	};
+	template<typename T>
+	struct is_void : public integral_constant<bool, IsVoid<T>::value> {};
+#pragma endregion is_void
+
+#pragma region is_convertible
+	template<typename From, typename To>
+	class IsConvertible
+	{
+		class dummy {};
+		typedef conditional_t<is_void<From>::value, dummy, From> From0;
+		typedef conditional_t<is_void<From>::value, dummy, To> To0;
+
+		typedef char tiny;
+		class large { tiny unnamed[2]; };
+
+		static detail::NoType Pimpl(...);
+		static detail::YesType Pimpl(To0);
+		static From0 MakeFrom();
+	public:
+		static const bool value = sizeof(Pimpl(MakeFrom())) == sizeof(detail::YesType);
+	};
+	template<typename From, typename To>
+	struct is_convertible : public integral_constant<bool, IsConvertible<From, To>::value> {};
+#pragma endregion is_convertible
 
 #pragma region ParamTester
 	template<typename...>

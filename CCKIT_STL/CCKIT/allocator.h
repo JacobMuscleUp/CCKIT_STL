@@ -7,10 +7,10 @@
 
 namespace cckit
 {
+#pragma region allocator
 	class allocator
 	{
 	public:
-
 		allocator(const char* _pName = nullptr);
 		allocator(const allocator& _src, const char* _pName = nullptr);
 		allocator& operator=(const allocator& _rhs);
@@ -27,6 +27,25 @@ namespace cckit
 		const char* mpName;
 	#endif
 	};
+	bool operator==(const allocator& a, const allocator& b);
+	bool operator!=(const allocator& a, const allocator& b);
+#pragma endregion allocator
+
+#pragma region allocator_malloc
+	class allocator_malloc : public allocator
+	{
+	public:
+		void* allocate(size_t _sz, int _flags = 0);
+		void* allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags = 0);
+		void deallocate(void* _pTarget);
+	};
+	bool operator==(const allocator_malloc& a, const allocator_malloc& b);
+	bool operator!=(const allocator_malloc& a, const allocator_malloc& b);
+#pragma endregion allocator_malloc
+
+#pragma region allocator_dummy
+	class allocator_dummy : public allocator {};
+#pragma endregion allocator_dummy
 }
 
 namespace cckit
@@ -48,6 +67,7 @@ namespace cckit
 	#endif
 	}
 #pragma endregion allocator::allocator
+
 #pragma region allocator::operator=
 	inline allocator& allocator::operator=(const allocator& _rhs)
 	{
@@ -57,6 +77,7 @@ namespace cckit
 		return *this;
 	}
 #pragma endregion allocator::operator=
+
 #pragma region allocator::allocate
 	inline void* allocator::allocate(size_t _sz, int _flags)
 	{
@@ -75,6 +96,7 @@ namespace cckit
 	#endif
 	}
 #pragma endregion allocator::allocate
+
 #pragma region allocator::deallocate
 	void allocator::deallocate(void* _pTarget)
 	{
@@ -85,6 +107,7 @@ namespace cckit
 	#endif
 	}
 #pragma endregion allocator::deallocate
+
 #pragma region allocator::get_name
 	const char* allocator::get_name() const
 	{
@@ -95,6 +118,7 @@ namespace cckit
 	#endif
 	}
 #pragma endregion allocator::get_name
+
 #pragma region allocator::set_name
 	void allocator::set_name(const char* _pName)
 	{
@@ -103,6 +127,30 @@ namespace cckit
 	#endif
 	}
 #pragma endregion allocator::set_name
+
+	bool operator==(const allocator& a, const allocator& b) { return true; }
+	bool operator!=(const allocator& a, const allocator& b) { return false; }
+
+#pragma region allocator_malloc::allocate
+	inline void* allocator_malloc::allocate(size_t _sz, int _flags)
+	{
+		return std::malloc(_sz);
+	}
+	inline void* allocator_malloc::allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags)
+	{
+		return std::malloc(_sz);
+	}
+#pragma endregion allocator_malloc::allocate
+
+#pragma region allocator_malloc::deallocate
+	void allocator_malloc::deallocate(void* _pTarget)
+	{
+		std::free(_pTarget);
+	}
+#pragma endregion allocator_malloc::deallocate
+
+	bool operator==(const allocator_malloc& a, const allocator_malloc& b) { return true; }
+	bool operator!=(const allocator_malloc& a, const allocator_malloc& b) { return false; }
 }
 
 #endif // !CCKIT_ALLOCATOR_H

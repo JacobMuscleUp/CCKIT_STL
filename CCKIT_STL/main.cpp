@@ -4,6 +4,7 @@
 #include "CCKIT/list.h"
 #include "CCKIT/functional.h"
 #include "CCKIT/random.h"
+#include "CCKIT/stack.h"
 #include <list>
 #include <string>
 
@@ -149,10 +150,33 @@ void test_list()
 	}
 }
 
+void test_stack()
+{
+	cckit::stack<foo> stack0;
+
+	const size_t numChoices = cckit::array_size(nums);
+	for (size_t i = numChoices; i > 0; --i)
+		nums[i - 1] = i;
+	for (size_t i = 0; i < listSize; ++i) {
+		fooList[i] = foo(nums[i], strs[i]);
+	}
+
+	for (auto i = listSize; i > 0; --i)
+		stack0.push(cckit::move(fooList[i - 1]));
+	for (decltype(stack0)::size_type i = 0; i < stack0.size(); ++i)
+		cout << stack0[i] << endl;
+	cout << endl;
+	while (!stack0.empty()) {
+		cout << stack0.top() << endl;
+		stack0.pop();
+	}
+}
+
 int main()
 {	
 	int temp;
 	test_list();
+	//test_stack();
 	std::cin >> temp;
 	return 1;
 }
