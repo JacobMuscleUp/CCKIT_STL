@@ -8,6 +8,15 @@
 
 namespace cckit
 {
+	// stack is an adapter class that provides a LIFO interface
+	// via wrapping a sequence that provides at least the following operations:
+	//		push_back
+	//		pop_back
+	//		emplace_back
+	//		back
+	//		empty
+	//		size
+	// in practice this means vector, deque, string, list, intrusive_list. 
 	template<typename T, typename Container = list<T> >
 	class stack
 	{

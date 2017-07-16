@@ -60,6 +60,9 @@
     <ClInclude Include="CCKIT\static_assert.h">
       <Filter>Header Files\CCKIT</Filter>
     </ClInclude>
+    <ClInclude Include="CCKIT\algorithm.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

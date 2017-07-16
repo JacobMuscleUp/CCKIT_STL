@@ -73,6 +73,7 @@ namespace cckit
 	public:
 		explicit ListIterator(const node_type* _pNode = nullptr) CCKIT_NOEXCEPT;
 		ListIterator(const this_type& _src) CCKIT_NOEXCEPT;
+		this_type& operator=(const this_type& _rhs) CCKIT_NOEXCEPT;
 
 		this_type next() const CCKIT_NOEXCEPT;
 		this_type prev() const CCKIT_NOEXCEPT;
@@ -374,6 +375,16 @@ namespace cckit
 		: mpNode(_src.mpNode)
 	{}
 #pragma endregion ListIterator<T, Pointer, Reference>::ListIterator
+
+#pragma region ListIterator<T, Pointer, Reference>::operator=
+	template <typename T, typename Pointer, typename Reference>
+	inline typename ListIterator<T, Pointer, Reference>::this_type& 
+		ListIterator<T, Pointer, Reference>::operator=(const this_type& _rhs) CCKIT_NOEXCEPT
+	{
+		mpNode = _rhs.mpNode;
+		return *this;
+	}
+#pragma endregion ListIterator<T, Pointer, Reference>::operator=
 
 #pragma region ListIterator<T, Pointer, Reference>::next
 	template <typename T, typename Pointer, typename Reference>

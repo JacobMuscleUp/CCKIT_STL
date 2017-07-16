@@ -227,7 +227,7 @@ namespace cckit
 		: true_type {};
 #pragma endregion is_iterator
 
-#pragma region Distance
+#pragma region distance
 	template <typename InputIterator>
 	inline typename iterator_traits<InputIterator>::difference_type
 		distance(InputIterator _first, InputIterator _last)
@@ -253,7 +253,7 @@ namespace cckit
 	{
 		return static_cast<typename iterator_traits<RandomAccessIterator>::difference_type>(_last - _first);
 	}
-#pragma endregion Distance
+#pragma endregion distance
 
 #pragma region advance
 	template <typename InputIterator, typename Distance>

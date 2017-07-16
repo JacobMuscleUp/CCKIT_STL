@@ -7,6 +7,7 @@
 
 namespace cckit
 {
+	// COMPARISON OPERATION
 #pragma region less
 	template<typename T = void>
 	struct less : public binary_function<T, T, bool>
@@ -28,6 +29,7 @@ namespace cckit
 		}
 	};
 #pragma endregion less
+
 #pragma region greater
 	template<typename T = void>
 	struct greater : public binary_function<T, T, bool>
@@ -51,6 +53,7 @@ namespace cckit
 		}
 	};
 #pragma endregion greater
+	//! COMPARISON OPERATION
 }
 
 #endif // !CCKIT_FUNCTIONAL_H
