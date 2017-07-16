@@ -236,9 +236,8 @@ namespace cckit
 	template<typename InputIterator, typename OutputIterator>
 	OutputIterator copy(InputIterator _first, InputIterator _last, OutputIterator _dFirst)
 	{
-		while (_first != _last) {
-			*_dFirst++ = *_first++;
-		}
+		for (; _first != _last; ++_first, ++_dFirst)
+			*_dFirst = *_first;
 		return _dFirst;
 	}
 	template<typename InputIterator, typename OutputIterator, typename UnaryPredicate>
@@ -251,7 +250,97 @@ namespace cckit
 		}
 		return _dFirst;
 	}
+	template<typename InputIterator, typename Size, typename OutputIterator>
+	OutputIterator copy_n(InputIterator _first, Size _count, OutputIterator _dFirst)
+	{
+		for (; _count > 0; --_count, ++_first, ++_dFirst)
+			*_dFirst = *_first;
+		return _dFirst;
+	}
 #pragma endregion copy
+
+#pragma region copy_backward
+	template<typename BidirectionalIterator0, typename BidirectionalIterator1>
+	BidirectionalIterator1 copy_backward(BidirectionalIterator0 _first, BidirectionalIterator0 _last, BidirectionalIterator1 _dLast)
+	{
+		while (_last != _first)
+			*(--_dLast) = *(--_last);
+		return _dLast;
+	}
+#pragma endregion copy_backward
+
+#pragma region move
+	template<typename InputIterator, typename OutputIterator>
+	OutputIterator move(InputIterator _first, InputIterator _last, OutputIterator _dFirst)
+	{
+		for (; _first != _last; ++_first, ++_dFirst) 
+			*_dFirst = move(*_first);
+		return _dFirst;
+	}
+#pragma endregion move
+
+#pragma region move_backward
+	template<typename BidirectionalIterator0, typename BidirectionalIterator1>
+	BidirectionalIterator1 move_backward(BidirectionalIterator0 _first, BidirectionalIterator0 _last, BidirectionalIterator1 _dLast)
+	{
+		while (_last != _first)
+			*(--_dLast) = move(*(--_last));
+		return _dLast;
+	}
+#pragma endregion move_backward
+
+#pragma region fill
+	template<typename ForwardIterator>
+	void fill(ForwardIterator _first, ForwardIterator _last, const typename iterator_traits<ForwardIterator>::value_type& _val)
+	{
+		for (; _first != _last; ++_first)
+			*_first = _val;
+	}
+#pragma endregion fill
+
+#pragma region fill_n
+	template<typename ForwardIterator, typename Size>
+	ForwardIterator fill_n(ForwardIterator _first, Size _count, const typename iterator_traits<ForwardIterator>::value_type& _val)
+	{
+		for (; _count > 0; --_count, ++_first)
+			*_first = _val;
+		return _first;
+	}
+#pragma endregion fill_n
+
+#pragma region transform
+	template<typename InputIterator, typename OutputIterator, typename UnaryOperation>
+	OutputIterator transform(InputIterator _first, InputIterator _last, OutputIterator _dFirst, UnaryOperation _unaryOp)
+	{
+		for (; _first != _last; ++_first, ++_dFirst)
+			*_dFirst = _unaryOp(*_first);
+		return _dFirst;
+	}
+	template<typename InputIterator0, typename InputIterator1, typename OutputIterator, typename BinaryOperation>
+		OutputIterator transform(InputIterator0 _first0, InputIterator0 _last0, InputIterator1 _first1,
+			OutputIterator _dFirst, BinaryOperation _binaryOp)
+	{
+		for (; _first0 != _last0; ++_first0, ++_first1, ++_dFirst)
+			*_dFirst = _binaryOp(*_first0, *_first1);
+		return _dFirst;
+	}
+#pragma endregion transform
+
+#pragma region generate
+		template<typename ForwardIterator, typename Generator>
+		inline void generate(ForwardIterator _first, ForwardIterator _last, Generator _generator)
+		{
+			cckit::fill(_first, _last, _generator());
+		}
+#pragma endregion generate
+
+#pragma region generate_n
+		template<typename ForwardIterator, typename Size, typename Generator>
+		inline ForwardIterator generate_n(ForwardIterator _first, Size _count, Generator _generator)
+		{
+			return cckit::fill_n(_first, _count, _generator());
+		}
+#pragma endregion generate_n
 	//! MODIFYING SEQUENCE OPERATION
 
 	// SORTING OPERATION
