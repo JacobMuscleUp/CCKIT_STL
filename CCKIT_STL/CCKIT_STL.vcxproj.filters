@@ -63,6 +63,12 @@
     <ClInclude Include="CCKIT\algorithm.h">
       <Filter>Header Files\CCKIT</Filter>
     </ClInclude>
+    <ClInclude Include="CCKIT\queue.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\tuple.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

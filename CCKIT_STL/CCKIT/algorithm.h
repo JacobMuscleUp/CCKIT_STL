@@ -381,50 +381,51 @@ namespace cckit
 #pragma endregion is_sorted_until
 
 #pragma region insertion_sort
-	template<typename RandomAccessIterator>
-	inline void insertion_sort(RandomAccessIterator _first, RandomAccessIterator _last)
+	template<typename BidirectionalIterator>
+	inline void insertion_sort(BidirectionalIterator _first, BidirectionalIterator _last)
 	{
-		cckit::insertion_sort(_first, _last, [](const decltype(*_first)& _arg0, const decltype(*_first)& _arg1) {
-			return _arg0 < _arg1;
-		});
+		cckit::insertion_sort(_first, _last, less<decltype(*_first)>());
 	}
-	template<typename RandomAccessIterator, typename StrictWeakOrdering>
-	void insertion_sort(RandomAccessIterator _first, RandomAccessIterator _last, StrictWeakOrdering _compare)
+	template<typename BidirectionalIterator, typename StrictWeakOrdering>
+	void insertion_sort(BidirectionalIterator _first, BidirectionalIterator _last, StrictWeakOrdering _compare)
 	{
 		for (auto current = _first; ++current != _last;) {
 			remove_reference_t<decltype(*current)> key = *current;
 
-			auto current0 = current;
-			auto end = _first; 
+			BidirectionalIterator current0 = current, end = _first, next0;
 			for (--end; --current0 != end && _compare(key, *current0);)
-				*(current0 + 1) = *current0;
-			*(current0 + 1) = key;
+				*(++(next0 = current0)) = *(current0);
+			*(++current0) = key;
 		}
 	}
+
 	template<typename T, size_t N>
 	void InsertionSort(T(&_arr)[N])
 	{
-		for (size_t i = 1; i < N; ++i) {
+		cckit::InsertionSort(_arr, less<T>());
+	}
+	template<typename T, size_t N, typename StrictWeakOrdering>
+	void InsertionSort(T(&_arr)[N], StrictWeakOrdering _compare)
+	{
+		for (int i = 1; i < N; ++i) {
 			T key = _arr[i];
 
-			size_t j = i - 1;
-			for (; j >= 0 && _arr[j] > key; --j) 
+			int j = i - 1;
+			for (; j >= 0 && _compare(key, _arr[j]); --j)
 				_arr[j + 1] = _arr[j];
-			_arr[j + 1] = key;
+			_arr[++j] = key;
 		}
 	}
 #pragma endregion insertion_sort
 
 #pragma region selection_sort
-	template<typename RandomAccessIterator>
-	inline void selection_sort(RandomAccessIterator _first, RandomAccessIterator _last)
+	template<typename BidirectionalIterator>
+	inline void selection_sort(BidirectionalIterator _first, BidirectionalIterator _last)
 	{
-		cckit::selection_sort(_first, _last, [](const decltype(*_first)& _arg0, const decltype(*_first)& _arg1) {
-			return _arg0 < _arg1;
-		});
+		cckit::selection_sort(_first, _last, less<decltype(*_first)>());
 	}
-	template<typename RandomAccessIterator, typename StrictWeakOrdering>
-	void selection_sort(RandomAccessIterator _first, RandomAccessIterator _last, StrictWeakOrdering _compare)
+	template<typename BidirectionalIterator, typename StrictWeakOrdering>
+	void selection_sort(BidirectionalIterator _first, BidirectionalIterator _last, StrictWeakOrdering _compare)
 	{
 		auto end = _last;
 		for (--end; _first != end; ++_first) {
@@ -432,19 +433,155 @@ namespace cckit
 			swap(*_first, *min);
 		}
 	}
+
 	template<typename T, size_t N>
 	void SelectionSort(T(&_arr)[N])
+	{
+		cckit::SelectionSort(_arr, less<T>());
+	}
+	template<typename T, size_t N, typename StrictWeakOrdering>
+	void SelectionSort(T(&_arr)[N], StrictWeakOrdering _compare)
 	{
 		for (size_t i = 0; i < N - 1; ++i) {
 			size_t min = i;
 
 			for (size_t j = i + 1; j < N; ++j)
-				if (_arr[j] < _arr[min])
+				if (_compare(_arr[j], _arr[min]))
 					min = j;
 			swap(_arr[i], _arr[min]);
 		}
 	}
 #pragma endregion selection_sort
+
+#pragma region quicksort
+	template<typename RandomAccessIterator>
+	inline void quicksort(RandomAccessIterator _first, RandomAccessIterator _last)
+	{
+		cckit::quicksort(_first, _last, less<decltype(*_first)>());
+	}
+	template<typename RandomAccessIterator, typename StrictWeakOrdering>
+	void quicksort(RandomAccessIterator _first, RandomAccessIterator _last, StrictWeakOrdering _compare)
+	{
+		static StrictWeakOrdering compare;
+		compare = _compare;
+
+		struct Quicksort {
+			static void Func(RandomAccessIterator _first, RandomAccessIterator _last) {
+				if (_first < _last) {
+					auto pivot = Partition(_first, _last);
+					Func(_first, pivot);
+					Func(++pivot, _last);
+				}
+			}
+			static void Randomize(RandomAccessIterator _first, RandomAccessIterator _last) {
+				auto length = _last - _first;
+				swap(_first[rand_int(0, length)], _first[length - 1]);
+			}
+		private:
+			static RandomAccessIterator Partition(RandomAccessIterator _first, RandomAccessIterator _last) {
+				auto pivot = _first;
+				auto end = _last; --end;
+				for (auto current = _first; current != end; ++current)
+					if (!compare(*end, *current))
+						swap(*(pivot++), *current);
+				swap(*pivot, *end);
+
+				return pivot;
+			}
+		};
+
+		Quicksort::Randomize(_first, _last);
+		Quicksort::Func(_first, _last);
+	}
+
+	template<typename T, size_t N>
+	void Quicksort(T(&_arr)[N])
+	{
+		cckit::Quicksort(_arr, less<T>());
+	}
+	template<typename T, size_t N, typename StrictWeakOrdering>
+	void Quicksort(T(&_arr)[N], StrictWeakOrdering _compare)
+	{
+		static StrictWeakOrdering compare;
+		compare = _compare;
+
+		struct QuicksortImpl {
+			static void Func(T _arr[], size_t _left, size_t _right) {
+				if (_left < _right) {
+					size_t pivot = Partition(_arr, _left, _right);
+					Func(_arr, _left, pivot - 1);
+					Func(_arr, pivot + 1, _right);
+				}
+			}
+			static void Randomize(T _arr[]) {
+				swap(_arr[rand_int(0, N)], _arr[N - 1]);
+			}
+		private:
+			static size_t Partition(T _arr[], size_t _left, size_t _right) {
+				size_t pivot = _left;
+				for (size_t i = _left; i < _right; ++i)
+					if (!compare(_arr[_right], _arr[i]))
+						swap(_arr[pivot++], _arr[i]);
+				swap(_arr[pivot], _arr[_right]);
+
+				return pivot;
+			}
+		};
+
+		QuicksortImpl::Randomize(_arr);
+		QuicksortImpl::Func(_arr, 0, N - 1);
+	}
+#pragma endregion quicksort
+	
+#pragma region heapsort
+	template<typename T, size_t N>
+	void Heapsort(T(&_arr)[N])
+	{
+		cckit::Heapsort(_arr, less<T>());
+	}
+	template<typename T, size_t N, typename StrictWeakOrdering>
+	void Heapsort(T(&_arr)[N], StrictWeakOrdering _compare)
+	{
+		static StrictWeakOrdering compare;
+		compare = _compare;
+
+		struct HeapsortImpl {
+			static size_t Left(size_t _index) { return 2 * _index; }
+			static size_t Right(size_t _index) { return 2 * _index + 1; }
+			static size_t Parent(size_t _index) { return _index / 2; }
+
+			static void Heapify(T _arr[], size_t _root, size_t _end) {
+				size_t left, right, next = _root + 1;
+
+				while (next != _root) {
+					left = Left(_root), right = Right(_root);
+					next = _root;
+					if (left <= _end && compare(_arr[next], _arr[left]))
+						next = left;
+					if (right <= _end && compare(_arr[next], _arr[right]))
+						next = right;
+
+					if (next != _root) {
+						swap(_arr[next], _arr[_root]);
+						_root = next;
+						next = _root + 1;
+					}
+				}
+			}
+			static void MakeHeap(T _arr[]) {
+				for (int i = Parent(N - 1); i >= 0; --i)
+					Heapify(_arr, i, N - 1);
+			}
+		};
+
+		size_t end = N - 1;
+		HeapsortImpl::MakeHeap(_arr);
+		for (size_t i = end; i > 0; --i) {
+			swap(_arr[i], _arr[0]);
+			HeapsortImpl::Heapify(_arr, 0, --end);
+		}
+	}
+#pragma endregion heapsort
 
 #pragma region counting_sort
 	template<typename T, size_t N>
