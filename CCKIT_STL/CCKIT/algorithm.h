@@ -5,7 +5,7 @@
 #include "type_traits.h"
 #include "utility.h"
 #include "functional.h"
-
+#include <iostream>
 namespace cckit
 {
 	// NON-MODIFYING SEQUENCE OPERATION
@@ -379,6 +379,103 @@ namespace cckit
 		return cckit::is_sorted_until(_first, _last, less<decltype(*_first)>());
 	}
 #pragma endregion is_sorted_until
+
+#pragma region insertion_sort
+	template<typename RandomAccessIterator>
+	inline void insertion_sort(RandomAccessIterator _first, RandomAccessIterator _last)
+	{
+		cckit::insertion_sort(_first, _last, [](const decltype(*_first)& _arg0, const decltype(*_first)& _arg1) {
+			return _arg0 < _arg1;
+		});
+	}
+	template<typename RandomAccessIterator, typename StrictWeakOrdering>
+	void insertion_sort(RandomAccessIterator _first, RandomAccessIterator _last, StrictWeakOrdering _compare)
+	{
+		for (auto current = _first; ++current != _last;) {
+			remove_reference_t<decltype(*current)> key = *current;
+
+			auto current0 = current;
+			auto end = _first; 
+			for (--end; --current0 != end && _compare(key, *current0);)
+				*(current0 + 1) = *current0;
+			*(current0 + 1) = key;
+		}
+	}
+	template<typename T, size_t N>
+	void InsertionSort(T(&_arr)[N])
+	{
+		for (size_t i = 1; i < N; ++i) {
+			T key = _arr[i];
+
+			size_t j = i - 1;
+			for (; j >= 0 && _arr[j] > key; --j) 
+				_arr[j + 1] = _arr[j];
+			_arr[j + 1] = key;
+		}
+	}
+#pragma endregion insertion_sort
+
+#pragma region selection_sort
+	template<typename RandomAccessIterator>
+	inline void selection_sort(RandomAccessIterator _first, RandomAccessIterator _last)
+	{
+		cckit::selection_sort(_first, _last, [](const decltype(*_first)& _arg0, const decltype(*_first)& _arg1) {
+			return _arg0 < _arg1;
+		});
+	}
+	template<typename RandomAccessIterator, typename StrictWeakOrdering>
+	void selection_sort(RandomAccessIterator _first, RandomAccessIterator _last, StrictWeakOrdering _compare)
+	{
+		auto end = _last;
+		for (--end; _first != end; ++_first) {
+			auto min = cckit::min_element(_first, _last, _compare);
+			swap(*_first, *min);
+		}
+	}
+	template<typename T, size_t N>
+	void SelectionSort(T(&_arr)[N])
+	{
+		for (size_t i = 0; i < N - 1; ++i) {
+			size_t min = i;
+
+			for (size_t j = i + 1; j < N; ++j)
+				if (_arr[j] < _arr[min])
+					min = j;
+			swap(_arr[i], _arr[min]);
+		}
+	}
+#pragma endregion selection_sort
+
+#pragma region counting_sort
+	template<typename T, size_t N>
+	void CountingSort(T(&A)[N], enable_if_t<is_integral<T>::value, void>* = nullptr)
+	{
+		int k = A[0];
+		for (int i = 1; i < N; ++i)
+			if (A[i] > k)
+				k = A[i];
+
+		int *B = new int[N], *C = new int[k + 1];
+
+		for (int i = 0; i <= k; ++i)
+			C[i] = 0;
+		for (int j = 0; j < N; ++j)
+			++C[A[j]];
+		for (int i = 1; i <= k; ++i)
+			C[i] += C[i - 1];
+
+		for (int j = N - 1; j >= 0; --j) {
+			B[C[A[j]] - 1] = A[j];
+			--C[A[j]];
+		}
+
+		for (int j = 0; j < N; ++j)
+			A[j] = move(B[j]);
+
+		delete[] B;
+		delete[] C;
+	}
+#pragma endregion counting_sort
 	//! SORTING OPERATION
 
 	// MIN/MAX OPERATION

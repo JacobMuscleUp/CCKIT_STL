@@ -12,6 +12,7 @@ namespace cckit
 		class YesType { NoType unnamed[2]; };
 	}
 
+	// HELPER CLASSES
 #pragma region integral_constant
 	template <typename T, T Val>
 	struct integral_constant
@@ -26,19 +27,60 @@ namespace cckit
 	typedef integral_constant<bool, true>  true_type;
 	typedef integral_constant<bool, false> false_type;
 #pragma endregion integral_constant
+	//! HELPER CLASSES
 
+	// CONST-VOLATILITY SPECIFIERS
+#pragma region remove_cv
+	template <typename T> struct remove_const { typedef T type; };
+	template <typename T> struct remove_const<const T> { typedef T type; };
+	template <typename T> struct remove_const<const T[]> { typedef T type[]; };
+	template <typename T, size_t N> struct remove_const<const T[N]> { typedef T type[N]; };
+	template <typename T> using remove_const_t = typename remove_const<T>::type;
+
+	template <typename T> struct remove_volatile { typedef T type; };
+	template <typename T> struct remove_volatile<volatile T> { typedef T type; };
+	template <typename T> struct remove_volatile<volatile T[]> { typedef T type[]; };
+	template <typename T, size_t N> struct remove_volatile<volatile T[N]> { typedef T type[N]; };
+	template <typename T> using remove_volatile_t = typename remove_volatile<T>::type;
+
+	template <typename T>
+	struct remove_cv { typedef typename remove_volatile<typename remove_const<T>::type>::type type; };
+	template <typename T> using remove_cv_t = typename remove_cv<T>::type;
+#pragma endregion remove_cv
+	//! CONST-VOLATILITY SPECIFIERS
+
+	// PRIMARY TYPE CATEGORIES
+#pragma region is_integral
+	template <typename T> struct IsIntegral : public false_type {};
+
+	template <> struct IsIntegral<unsigned char> : public true_type {};
+	template <> struct IsIntegral<unsigned short> : public true_type {};
+	template <> struct IsIntegral<unsigned int> : public true_type {};
+	template <> struct IsIntegral<unsigned long> : public true_type {};
+	template <> struct IsIntegral<unsigned long long> : public true_type {};
+
+	template <> struct IsIntegral<signed char> : public true_type {};
+	template <> struct IsIntegral<signed short> : public true_type {};
+	template <> struct IsIntegral<signed int> : public true_type {};
+	template <> struct IsIntegral<signed long> : public true_type {};
+	template <> struct IsIntegral<signed long long> : public true_type {};
+
+	template <> struct IsIntegral<bool> : public true_type {};
+	template <> struct IsIntegral<char> : public true_type {};
+
+	template <typename T>
+	struct is_integral : public IsIntegral<typename remove_cv<T>::type> {};
+#pragma endregion is_integral
+	//! PRIMARY TYPE CATEGORIES
+	
+	// REFERENCES
 #pragma region remove_reference
 	template <typename T> struct remove_reference { typedef T type; };
 	template <typename T> struct remove_reference<T&> { typedef T type; };
 	template <typename T> struct remove_reference<T&&> { typedef T type; };
+	template <typename T> using remove_reference_t = typename remove_reference<T>::type;
 #pragma endregion remove_reference
-
-#pragma region remove_const
-	template <typename T> struct remove_const { typedef T type; };
-	template <typename T> struct remove_const<const T> { typedef T type; };
-	template <typename T> struct remove_const<const T[]> { typedef T type[]; };
-	template <typename T, std::size_t N> struct remove_const<const T[N]> { typedef T type[N]; };
-#pragma endregion remove_const
+	//! REFERENCES
 
 #pragma region enable_if
 	template<bool, typename T = void>
