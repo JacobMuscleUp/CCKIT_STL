@@ -19,6 +19,9 @@
     <Filter Include="Header Files\CCKIT\internal">
       <UniqueIdentifier>{6783211c-e3a6-4c7d-8df6-6d5a81c35045}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\CCKIT\experimental">
+      <UniqueIdentifier>{6c52caf7-aaa2-41e7-a338-05021752d649}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCKIT\allocator.h">
@@ -60,6 +63,9 @@
     <ClInclude Include="CCKIT\static_assert.h">
       <Filter>Header Files\CCKIT</Filter>
     </ClInclude>
+    <ClInclude Include="CCKIT\experimental\graph.h">
+      <Filter>Header Files\CCKIT\experimental</Filter>
+    </ClInclude>
     <ClInclude Include="CCKIT\algorithm.h">
       <Filter>Header Files\CCKIT</Filter>
     </ClInclude>
@@ -68,6 +74,9 @@
     </ClInclude>
     <ClInclude Include="CCKIT\tuple.h">
       <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\experimental\csv_map.h">
+      <Filter>Header Files\CCKIT\experimental</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

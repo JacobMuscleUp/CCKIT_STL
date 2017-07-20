@@ -83,7 +83,7 @@ namespace cckit
 	{}
 	template<typename T, typename Container>
 	inline queue<T, Container>::queue(container_type&& _container = container_type())
-		: mContainer(move(_container))
+		: mContainer(cckit::move(_container))
 	{}
 	template<typename T, typename Container>
 	inline queue<T, Container>::queue(const this_type& _src)
@@ -91,7 +91,7 @@ namespace cckit
 	{}
 	template<typename T, typename Container>
 	inline queue<T, Container>::queue(this_type&& _src)
-		: mContainer(move(_src.mContainer))
+		: mContainer(cckit::move(_src.mContainer))
 	{}
 	template<typename T, typename Container>
 	template<typename Allocator>

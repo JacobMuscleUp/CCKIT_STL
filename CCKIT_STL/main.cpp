@@ -4,9 +4,21 @@
 #include "CCKIT/list.h"
 #include "CCKIT/functional.h"
 #include "CCKIT/random.h"
+#include "CCKIT/memory.h"
 #include "CCKIT/stack.h"
+#include "CCKIT/queue.h"
+#include "CCKIT/algorithm.h"
+#include "CCKIT/experimental/graph.h"
+#include "CCKIT/experimental/csv_map.h"
 #include <list>
 #include <string>
+#include <functional>
+#include <stack>
+
+#include <algorithm>
+#include <vector>
+#include <fstream>
+#include <sstream>
 
 #include <iostream>
 using std::cout; using std::endl;
@@ -30,6 +42,7 @@ inline std::ostream& operator<<(std::ostream& _os, const foo& _a) noexcept
 	return _os << "(" << _a.mV0 << ", " << _a.mV1 << ")" << endl;
 }*/
 
+/// cannot use std::string since cckit::list currently fails to handle the deallocation related to placement new
 class foo
 {
 public:
@@ -87,7 +100,7 @@ foo fooList[listSize];
 void test_list()
 {
 	//std::list<foo> list;
-	cckit::list<foo> list;
+	cckit::list<foo, cckit::allocator_malloc> list;
 	typedef decltype(list) list_type;
 	{
 		const size_t numChoices = cckit::array_size(nums);
@@ -145,8 +158,8 @@ void test_list()
 			cout << *iter << endl;
 		cout << endl;
 		cout << "list1.size() = " << list1.size() << endl;
-		for (auto iter = list1.rbegin(); iter != list1.crend(); iter++)
-			cout << iter->mV0 << ", " << iter->mV1 << endl;
+		for (auto iter = list1.cbegin(); iter != list1.cend(); ++iter)
+			cout << *iter << endl;
 	}
 }
 
@@ -172,11 +185,71 @@ void test_stack()
 	}
 }
 
+void test_queue()
+{
+	cckit::queue<foo> queue0;
+
+	const size_t numChoices = cckit::array_size(nums);
+	for (size_t i = numChoices; i > 0; --i)
+		nums[i - 1] = i;
+	for (size_t i = 0; i < listSize; ++i) {
+		fooList[i] = foo(nums[i], strs[i]);
+	}
+
+	for (auto i = listSize; i > 0; --i)
+		queue0.push(cckit::move(fooList[i - 1]));
+	for (decltype(queue0)::size_type i = 0; i < queue0.size(); ++i)
+		cout << queue0[i] << endl;
+	cout << endl;
+	while (!queue0.empty()) {
+		cout << queue0.front() << endl;
+		queue0.pop();
+	}
+}
+
+void test_algorithm()
+{
+	cckit::list<int> v = { 3, 7, 1, 5, 2, 2, 2, 7, 7, 4 };
+	int a[] = { 3, 7, 1, 5, 2, 2, 2, 7, 7, 4, 6, 33 };
+	int b[] = { 8, 2 };
+	int c[] = { 2, 5, 3 };
+	const auto arrSize = cckit::array_size(a);
+	for (size_t i = 0; i < arrSize; ++i) {
+		cout << a[i] << endl;
+	}
+	cout << endl;
+
+	cckit::selection_sort(v.begin(), v.end());
+	//cckit::insertion_sort(a, a + arrSize);
+	cckit::Heapsort(a);
+	for (size_t i = 0; i < arrSize; ++i) {
+		cout << a[i] << endl;
+	}
+	cout << "min = " << *cckit::min_element(a, a + cckit::array_size(a)) << endl;
+	cout << "max = " << *cckit::max_element(a, a + cckit::array_size(a)) << endl;
+	cout << endl;
+
+	for (auto i : v)
+		cout << i << endl;
+}
+
+void test_graph()
+{
+	cckit::csv_map csvmap0("../input.csv");
+	if (csvmap0.initialized)
+		csvmap0.search(2, 2, 5);
+	csvmap0.write("../output.csv");
+}
+
 int main()
 {	
 	int temp;
+
+	//test_graph();
+	//test_algorithm();
 	test_list();
 	//test_stack();
+	//test_queue();
 	std::cin >> temp;
 	return 1;
 }
