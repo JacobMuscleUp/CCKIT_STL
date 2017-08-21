@@ -78,6 +78,9 @@
     <ClInclude Include="CCKIT\experimental\csv_map.h">
       <Filter>Header Files\CCKIT\experimental</Filter>
     </ClInclude>
+    <ClInclude Include="CCKIT\experimental\maze_gen.h">
+      <Filter>Header Files\CCKIT\experimental</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

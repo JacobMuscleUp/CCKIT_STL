@@ -10,6 +10,7 @@
 #include "CCKIT/algorithm.h"
 #include "CCKIT/experimental/graph.h"
 #include "CCKIT/experimental/csv_map.h"
+#include "CCKIT/experimental/maze_gen.h"
 #include <list>
 #include <string>
 #include <functional>
@@ -241,13 +242,30 @@ void test_graph()
 	csvmap0.write("../output.csv");
 }
 
+void test_mazegen()
+{
+	cckit::grid_dist maze(12, 12);
+	//huntnkill_mazegen(maze);
+	rec_backtrack_mazegen(maze);
+	//rec_backtrack_mazegen_2(maze, maze.rand_cell());
+	//bintree_mazegen(maze);
+	maze.update_dists(maze.at(3, 3));
+	maze.calc_path(maze.at(8, 7));
+	cout << maze << endl;
+	for (int i = 0; i < 5; ++i) { cout << endl; }
+	maze.update_dists(maze.at(3, 3));
+	maze.calc_path(maze.at(0, 0));
+	cout << maze << endl;
+}
+
 int main()
 {	
 	int temp;
 
 	//test_graph();
 	//test_algorithm();
-	test_list();
+	//test_list();
+	test_mazegen();
 	//test_stack();
 	//test_queue();
 	std::cin >> temp;
