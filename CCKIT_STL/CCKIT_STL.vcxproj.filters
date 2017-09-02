@@ -81,6 +81,18 @@
     <ClInclude Include="CCKIT\experimental\maze_gen.h">
       <Filter>Header Files\CCKIT\experimental</Filter>
     </ClInclude>
+    <ClInclude Include="CCKIT\vector.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\internal\avltree.h">
+      <Filter>Header Files\CCKIT\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\set.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\map.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

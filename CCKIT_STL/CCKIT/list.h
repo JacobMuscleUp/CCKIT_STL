@@ -104,7 +104,7 @@ namespace cckit
 	{
 	public:
 		typedef T value_type;
-		typedef size_t size_type;
+		typedef std::size_t size_type;
 		typedef ptrdiff_t difference_type;
 		typedef Allocator allocator_type;
 		typedef ListNode<T> node_type;
@@ -543,8 +543,10 @@ namespace cckit
 	template<typename T, typename Allocator>
 	inline void ListBase<T, Allocator>::FreeNode(node_type* _pNode)
 	{
-		_pNode->~node_type();
-		mAllocator.deallocate(_pNode);
+		if (_pNode) {
+			_pNode->~node_type();
+			mAllocator.deallocate(_pNode);
+		}
 	}
 #pragma endregion ListBase<T, Allocator>::FreeNode
 
@@ -1330,8 +1332,8 @@ namespace cckit
 		list<T, Allocator>::CreateNode(Args&&... _args)
 	{
 		node_type* pNode = AllocateNode();
-		pNode->mVal = cckit::move(value_type(cckit::forward<Args>(_args)...));
-		//::new(&pNode->mVal) value_type(cckit::forward<Args>(_args)...);
+		pNode->mVal.~value_type();
+		::new(&pNode->mVal) value_type(cckit::forward<Args>(_args)...);
 		return pNode;
 	}
 #pragma endregion list<T, Allocator>::CreateNode

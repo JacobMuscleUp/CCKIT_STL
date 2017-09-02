@@ -26,18 +26,22 @@
     <ClInclude Include="CCKIT\experimental\maze_gen.h" />
     <ClInclude Include="CCKIT\functional.h" />
     <ClInclude Include="CCKIT\internal\afx_config.h" />
+    <ClInclude Include="CCKIT\internal\avltree.h" />
     <ClInclude Include="CCKIT\internal\config.h" />
     <ClInclude Include="CCKIT\internal\functional_base.h" />
     <ClInclude Include="CCKIT\iterator.h" />
     <ClInclude Include="CCKIT\list.h" />
+    <ClInclude Include="CCKIT\map.h" />
     <ClInclude Include="CCKIT\memory.h" />
     <ClInclude Include="CCKIT\queue.h" />
     <ClInclude Include="CCKIT\random.h" />
+    <ClInclude Include="CCKIT\set.h" />
     <ClInclude Include="CCKIT\stack.h" />
     <ClInclude Include="CCKIT\static_assert.h" />
     <ClInclude Include="CCKIT\tuple.h" />
     <ClInclude Include="CCKIT\type_traits.h" />
     <ClInclude Include="CCKIT\utility.h" />
+    <ClInclude Include="CCKIT\vector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

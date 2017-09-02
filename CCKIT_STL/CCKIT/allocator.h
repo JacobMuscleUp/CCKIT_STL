@@ -1,6 +1,7 @@
 #ifndef CCKIT_ALLOCATOR_H
 #define CCKIT_ALLOCATOR_H
 
+#include <new>
 #include <cstdlib>
 #include "internal/config.h"
 #include "internal/afx_config.h"

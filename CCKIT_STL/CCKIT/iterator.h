@@ -106,7 +106,7 @@ namespace cckit
 
 		CCKIT_CONSTEXPR iterator_type base() const;
 
-		CCKIT_CONSTEXPR reference operator*() const;
+		reference operator*() const;
 		CCKIT_CONSTEXPR pointer operator->() const;
 		CCKIT_CONSTEXPR reference operator[](difference_type _offset) const;
 
@@ -114,6 +114,10 @@ namespace cckit
 		this_type operator++(int);
 		this_type& operator--();
 		this_type operator--(int);
+		this_type operator+(difference_type _offset) const;
+		this_type operator-(difference_type _offset) const;
+		this_type& operator+=(difference_type _offset);
+		this_type& operator-=(difference_type _offset);
 
 		template<typename Iterator0, typename Iterator1>
 		friend CCKIT_CONSTEXPR bool operator== <>(const reverse_iterator<Iterator0> _lhs, const reverse_iterator<Iterator1> _rhs);
@@ -123,6 +127,9 @@ namespace cckit
 	protected:
 		iterator_type mBase;
 	};
+	template<typename Iterator0, typename Iterator1>
+	auto operator-(const reverse_iterator<Iterator0>& _lhs, const reverse_iterator<Iterator1>& _rhs)
+		-> decltype(_rhs.base() - _lhs.base());
 
 	template<typename Iterator>
 	inline CCKIT_CONSTEXPR reverse_iterator<Iterator>::reverse_iterator()
@@ -155,13 +162,13 @@ namespace cckit
 	}
 
 	template<typename Iterator>
-	inline CCKIT_CONSTEXPR typename reverse_iterator<Iterator>::reference
+	inline typename reverse_iterator<Iterator>::reference
 		reverse_iterator<Iterator>::operator*() const
 	{
-		--const_cast<this_type*>(this)->mBase;
-		return *(const_cast<this_type*>(this)->mBase++);
-		/*iterator_type temp = mBase;
-		return *--temp;*/
+		/*--const_cast<this_type*>(this)->mBase;
+		return *(const_cast<this_type*>(this)->mBase++);*/
+		iterator_type temp = mBase;
+		return *--temp;
 	}
 	template<typename Iterator>
 	inline CCKIT_CONSTEXPR typename reverse_iterator<Iterator>::pointer
@@ -205,6 +212,38 @@ namespace cckit
 		this_type temp = --*this;
 		return ++temp;
 	}
+	template<typename Iterator>
+	inline typename reverse_iterator<Iterator>::this_type
+		reverse_iterator<Iterator>::operator+(difference_type _offset) const
+	{
+		this_type temp = *this;
+		*this += _offset;
+		return temp;
+	}
+	template<typename Iterator>
+	inline typename reverse_iterator<Iterator>::this_type
+		reverse_iterator<Iterator>::operator-(difference_type _offset) const
+	{
+		this_type temp = *this;
+		*this -= _offset;
+		return temp;
+	}
+	template<typename Iterator>
+	inline typename reverse_iterator<Iterator>::this_type&
+		reverse_iterator<Iterator>::operator+=(difference_type _offset)
+	{
+		for (; _offset > 0; --_offset)
+			++*this;
+		return *this;
+	}
+	template<typename Iterator>
+	inline typename reverse_iterator<Iterator>::this_type&
+		reverse_iterator<Iterator>::operator-=(difference_type _offset)
+	{
+		for (; _offset > 0; --_offset)
+			--*this;
+		return *this;
+	}
 
 	template<typename Iterator0, typename Iterator1>
 	CCKIT_CONSTEXPR bool operator==(const reverse_iterator<Iterator0> _lhs, const reverse_iterator<Iterator1> _rhs)
@@ -215,6 +254,12 @@ namespace cckit
 	CCKIT_CONSTEXPR bool operator!=(const reverse_iterator<Iterator0> _lhs, const reverse_iterator<Iterator1> _rhs)
 	{
 		return _lhs.mBase != _rhs.mBase;
+	}
+	template< class Iterator0, class Iterator1 >
+	auto operator-(const reverse_iterator<Iterator0>& _lhs, const reverse_iterator<Iterator1>& _rhs)
+		-> decltype(_rhs.base() - _lhs.base())
+	{
+		return _rhs.base() - _lhs.base();
 	}
 #pragma endregion reverse_iterator
 	
@@ -235,16 +280,20 @@ namespace cckit
 		typedef typename iterator_traits<InputIterator>::iterator_category iterator_category;
 		return Distance(_first, _last, iterator_category());
 	}
+	template <typename InputIterator, typename IteratorTag>
+	inline typename iterator_traits<InputIterator>::difference_type
+		Distance(InputIterator _first, InputIterator _last, IteratorTag)
+	{
+		typename iterator_traits<InputIterator>::difference_type distance = 0;
+		for (; _first != _last; ++_first, ++distance) {}
+		return distance;
+	}
 	template <typename InputIterator>
 	inline typename iterator_traits<InputIterator>::difference_type 
 		Distance(InputIterator _first, InputIterator _last, input_iterator_tag)
 	{
 		typename iterator_traits<InputIterator>::difference_type distance = 0;
-
-		while (_first != _last) {
-			++_first;
-			++distance;
-		}
+		for (; _first != _last; ++_first, ++distance) {}
 		return distance;
 	}
 	template <typename RandomAccessIterator>

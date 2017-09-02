@@ -2,11 +2,14 @@
 #include "CCKIT/functional.h"
 #include "CCKIT/allocator.h"
 #include "CCKIT/list.h"
+#include "CCKIT/vector.h"
 #include "CCKIT/functional.h"
 #include "CCKIT/random.h"
 #include "CCKIT/memory.h"
 #include "CCKIT/stack.h"
 #include "CCKIT/queue.h"
+#include "CCKIT/set.h"
+#include "CCKIT/map.h"
 #include "CCKIT/algorithm.h"
 #include "CCKIT/experimental/graph.h"
 #include "CCKIT/experimental/csv_map.h"
@@ -24,29 +27,8 @@
 #include <iostream>
 using std::cout; using std::endl;
 
-/*struct foo
+struct foo
 {
-	int mV0;
-	const char* mV1;
-
-	foo()
-		: mV0(3), mV1("default")
-	{}
-
-	foo(int _v0, const char* _v1)
-		: mV0(_v0), mV1(_v1)
-	{}
-};
-
-inline std::ostream& operator<<(std::ostream& _os, const foo& _a) noexcept
-{
-	return _os << "(" << _a.mV0 << ", " << _a.mV1 << ")" << endl;
-}*/
-
-/// cannot use std::string since cckit::list currently fails to handle the deallocation related to placement new
-class foo
-{
-public:
 	int mV0;
 	std::string mV1;
 
@@ -61,7 +43,7 @@ public:
 
 inline std::ostream& operator<<(std::ostream& _os, const foo& _a) noexcept
 {
-	return _os << "(" << _a.mV0 << ", " << _a.mV1.c_str() << ")" << endl;
+	return _os << "(" << _a.mV0 << ", " << _a.mV1.c_str() << ")";
 }
 
 inline bool operator==(const foo& _arg0, const foo& _arg1) noexcept
@@ -214,7 +196,7 @@ void test_algorithm()
 	int a[] = { 3, 7, 1, 5, 2, 2, 2, 7, 7, 4, 6, 33 };
 	int b[] = { 8, 2 };
 	int c[] = { 2, 5, 3 };
-	const auto arrSize = cckit::array_size(a);
+	/*const auto arrSize = cckit::array_size(a);
 	for (size_t i = 0; i < arrSize; ++i) {
 		cout << a[i] << endl;
 	}
@@ -231,7 +213,13 @@ void test_algorithm()
 	cout << endl;
 
 	for (auto i : v)
-		cout << i << endl;
+		cout << i << endl;*/
+
+	const auto aSize = cckit::array_size(a);
+	auto head = cckit::adjacent_find(a, a + aSize, [](decltype(*a) _arg0, decltype(*a) _arg1) { return 33.0/6 * _arg0 ==  _arg1; });
+	cckit::for_each(head, a + aSize, [](const decltype(*head)& _arg) {
+		cout << _arg << endl;
+	});
 }
 
 void test_graph()
@@ -240,6 +228,64 @@ void test_graph()
 	if (csvmap0.initialized)
 		csvmap0.search(2, 2, 5);
 	csvmap0.write("../output.csv");
+}
+
+void test_vector()
+{
+	typedef cckit::vector<foo> vectortype0;
+	vectortype0 vector0{ foo(5, "5th"), foo(4, "4th"), foo(15, "15th") };
+	vectortype0 vector1 = vector0, vector2(cckit::move(vector1));
+
+	vector0.reserve(4);
+	vector2.reserve(16);
+
+	vector0.insert(vector0.cend(), foo(10, "10th"));
+	vector0.emplace_back(11, "11th");
+	vector0.push_back(foo(12, "12th"));
+	vector0.pop_back();
+	vector0.insert(vector0.cbegin(), { foo(1, "1th"), foo(2, "2th"), foo(3, "3th"), foo(4, "4th") });
+	vector0.insert(vector0.cbegin(), { foo(-2, "-2th"), foo(-1, "-1th"), foo(0, "0th") });
+
+	vector1.swap(vector0);
+	vector1.shrink_to_fit();
+	vector1.pop_back();
+
+	vector0.insert(vector0.cbegin(), { foo(1, "1th"), foo(2, "2th"), foo(3, "3th"), foo(4, "4th") });
+	vector0.clear();
+	vector0.insert(vector0.cbegin(), { foo(1, "1th"), foo(2, "2th"), foo(3, "3th") });
+	vector0.resize(5);
+	vector0.resize(4);
+	vector0.resize(8);
+
+	cout << "vector0" << endl;
+	for (auto elem : vector0)
+		cout << elem << ", ";
+	cout << vector0.capacity() << endl;
+	cout << "vector1" << endl;
+	for (auto elem : vector1)
+		cout << elem << ", ";
+	cout << vector1.capacity() << endl;
+	cout << "vector2" << endl;
+	for (auto elem : vector2)
+		cout << elem << ", ";
+	cout << vector2.capacity() << endl;
+	/*cckit::vector<int> vector0 { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	vector0 = { 3, 1, 65, 2 };
+	decltype(vector0) vector2(cckit::move(vector0)), vector1;
+	vector1 = vector2;
+	vector1.insert(vector1.find(2), 5, 7);
+	vector1.emplace(vector1.find(1), 66);
+	cout << "vector1.capacity() = " << vector1.capacity() << endl;
+
+	for (auto &i : vector1) 
+		cout << i << " ";
+	cout << '\n';
+	for (decltype(vector1)::size_type i = 0; i < vector1.size(); ++i)
+		cout << vector1[i] << " ";
+	cout << endl;
+	for (decltype(vector1)::reverse_iterator current = vector1.rbegin(), head = current; current != vector1.rend(); ++current)
+		cout << head[vector1.size() - 1 - cckit::distance(vector1.rbegin(), current)] << " ";
+	cout << endl;*/
 }
 
 void test_mazegen()
@@ -258,14 +304,106 @@ void test_mazegen()
 	cout << maze << endl;
 }
 
+void test_setmap()
+{
+	cout << "SET" << endl;
+	cckit::multiset<int> tree0;
+	//cckit::set<int> tree0;
+	typedef decltype(tree0) treetype;
+
+	tree0.insert(4);
+	tree0.insert(1);
+	tree0.insert(1);
+	tree0.insert(7);
+	tree0.insert(2);
+	tree0.insert(2);
+	tree0.insert(2);
+	tree0.insert(3);
+
+	tree0.preorder_walk([](treetype::iterator _current) {
+		cout << *_current << endl;
+	}, tree0.root());
+	cout << endl;
+	tree0.inorder_walk([](treetype::iterator _current) {
+		cout << *_current << endl;
+	}, tree0.root());
+	cout << endl;
+	tree0.postorder_walk([](treetype::iterator _current) {
+		cout << *_current << endl;
+	}, tree0.root());
+
+	cout << endl;
+	cout << "MAP" << endl;
+	//cckit::map<int, int> tree1;
+	cckit::multimap<int, int> tree1;
+	typedef decltype(tree1) treetype1;
+
+	tree1.insert(cckit::make_pair(4, 4));
+	tree1.insert(cckit::make_pair(4, 4));
+	tree1.insert(cckit::make_pair(1, 1));
+	tree1.insert(cckit::make_pair(7, 7));
+	tree1.insert(cckit::make_pair(2, 2));
+	tree1.insert(cckit::make_pair(3, 3));
+	tree1.insert(cckit::make_pair(3, 3));
+	
+	tree1.preorder_walk([](treetype1::iterator _current) {
+		cout << "(" << _current->first << ", " << _current->second << ")" << endl;
+	}, tree1.root());
+	cout << endl;
+	tree1.inorder_walk([](treetype1::iterator _current) {
+		cout << "(" << _current->first << ", " << _current->second << ")" << endl;
+	}, tree1.root());
+	cout << endl;
+	tree1.postorder_walk([](treetype1::iterator _current) {
+		cout << "(" << _current->first << ", " << _current->second << ")" << endl;
+	}, tree1.root());
+}
+
+/*void* operator new[](std::size_t _bytes, const char*)
+{
+	cout << "bytes = " << _bytes << endl;
+	return ::operator new[](_bytes);
+}
+struct Test
+{
+	int* mA;
+	Test(int a) { mA = new int(a); }
+	~Test() { delete mA; }
+};*/
+
+
 int main()
 {	
+	
 	int temp;
+	
+	/*cckit::multiset<int> tree0;
+	//cckit::set<int> tree0;
+	typedef decltype(tree0) treetype;
 
+	tree0.insert(4);
+	tree0.insert(1);
+	tree0.insert(1);
+	auto pair1 = tree0.insert(7);
+	tree0.insert(2);
+	tree0.insert(2);
+	auto pair0 = tree0.insert(2);
+	tree0.insert(3);
+
+	for (auto current = tree0.begin(); current != tree0.cend(); current++)
+		cout << *current << endl;
+	cout << endl;
+	for (auto current = tree0.rbegin(); current != tree0.rend(); ++current)
+		cout << *current << endl;
+	cout << endl;
+	for (auto current = ----tree0.begin(); current != tree0.end(); current--)
+		cout << *current << endl;*/
+	test_setmap();
+	//test_vector();
 	//test_graph();
 	//test_algorithm();
 	//test_list();
-	test_mazegen();
+	//test_mazegen();
 	//test_stack();
 	//test_queue();
 	std::cin >> temp;

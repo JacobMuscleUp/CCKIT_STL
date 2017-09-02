@@ -46,6 +46,8 @@ namespace cckit
 	template <typename T>
 	struct remove_cv { typedef typename remove_volatile<typename remove_const<T>::type>::type type; };
 	template <typename T> using remove_cv_t = typename remove_cv<T>::type;
+
+	template<typename T> struct add_const { typedef const T type; };
 #pragma endregion remove_cv
 	//! CONST-VOLATILITY SPECIFIERS
 
@@ -72,6 +74,13 @@ namespace cckit
 	struct is_integral : public IsIntegral<typename remove_cv<T>::type> {};
 #pragma endregion is_integral
 	//! PRIMARY TYPE CATEGORIES
+
+	// TYPE PROPERTIES
+	template<typename T>
+	struct is_trivially_copyable 
+		: public integral_constant<bool, __is_trivially_copyable(T)>
+	{};
+	//! TYPE PROPERTIES
 	
 	// REFERENCES
 #pragma region remove_reference
@@ -79,8 +88,84 @@ namespace cckit
 	template <typename T> struct remove_reference<T&> { typedef T type; };
 	template <typename T> struct remove_reference<T&&> { typedef T type; };
 	template <typename T> using remove_reference_t = typename remove_reference<T>::type;
+
+	template<typename T> struct add_lvalue_reference { typedef T& type; };
+	template<typename T> struct add_rvalue_reference { typedef T&& type; };
 #pragma endregion remove_reference
 	//! REFERENCES
+
+	// SUPPORTED OPERATIONS
+	template<typename T, typename... Args>
+	class is_constructible
+	{
+	private:
+		template<typename U, typename... Args>
+		static decltype(U(declval<Args>()...), detail::YesType()) Query(int);
+		template<typename...>
+		static detail::NoType Query(...);
+	public:
+		static const bool value = (sizeof(Query<T, Args...>(0)) == sizeof(detail::YesType));
+	};
+
+	template<typename T>
+	class is_default_constructible : public is_constructible<T> {};
+	/*template<typename T>
+	class is_default_constructible
+	{
+	private:
+	template<typename U>
+	static decltype(U(), detail::YesType()) Query(int);
+	template<typename>
+	static detail::NoType Query(...);
+	public:
+	static const bool value = (sizeof(Query<T>(0)) == sizeof(detail::YesType));
+	};*/
+
+	template<typename T>
+	class is_copy_constructible : public is_constructible<T
+	, typename add_lvalue_reference<typename add_const<T>::type>::type> {};
+
+	template<typename T>
+	class is_move_constructible : public is_constructible<T
+		, typename add_rvalue_reference<T>::type> {};
+
+	template<typename T, typename U>
+	class is_assignable
+	{
+	private:
+		template<typename T, typename U>
+		static decltype(declval<T>() = declval<U>(), detail::YesType()) Query(int);
+		template<typename...>
+		static detail::NoType Query(...);
+	public:
+		static const bool value = (sizeof(Query<T, U>(0)) == sizeof(detail::YesType));
+	};
+	/*template<typename T, typename U, typename...>
+	struct is_assignable : public false_type {};
+	template<typename T, typename U>
+	struct is_assignable<T, U, decltype(declval<T>() = declval<U>(), char())> : public true_type {};*/
+
+	template<typename T>
+	class is_copy_assignable : public is_assignable<T&, const T&> {};
+
+	template<typename T>
+	class is_move_assignable : public is_assignable<T&, T&&> {};
+
+	template<typename T, typename U>
+	class is_swappable_with
+	{
+	private:
+		template<typename T, typename U>
+		static decltype(swap(declval<T>(), declval<U>()), swap(declval<U>(), declval<T>()), detail::YesType()) Query(int);
+		template<typename...>
+		static detail::NoType Query(...);
+	public:
+		static const bool value = (sizeof(Query<T, U>(0)) == sizeof(detail::YesType));
+	};
+
+	template<typename T>
+	class is_swappable : public is_swappable_with<T&, T&> {};
+	//! SUPPORTED OPERATIONS
 
 #pragma region enable_if
 	template<bool, typename T = void>
@@ -140,14 +225,10 @@ namespace cckit
 		typedef conditional_t<is_void<From>::value, dummy, From> From0;
 		typedef conditional_t<is_void<From>::value, dummy, To> To0;
 
-		typedef char tiny;
-		class large { tiny unnamed[2]; };
-
 		static detail::NoType Pimpl(...);
 		static detail::YesType Pimpl(To0);
-		static From0 MakeFrom();
 	public:
-		static const bool value = sizeof(Pimpl(MakeFrom())) == sizeof(detail::YesType);
+		static const bool value = sizeof(Pimpl(declval<From0>())) == sizeof(detail::YesType);
 	};
 	template<typename From, typename To>
 	struct is_convertible : public integral_constant<bool, IsConvertible<From, To>::value> {};

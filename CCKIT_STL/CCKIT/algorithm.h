@@ -94,22 +94,18 @@ namespace cckit
 	InputIterator find_if(InputIterator _first, InputIterator _last,
 		UnaryPredicate _pred)
 	{
-		if (_first != _last) {
-			for (; _first != _last; ++_first)
-				if (_pred(*(_first)))
-					return _first;
-		}
+		for (; _first != _last; ++_first)
+			if (_pred(*(_first)))
+				return _first;
 		return _last;
 	}
 	template<typename InputIterator, typename UnaryPredicate>
 	InputIterator find_if_not(InputIterator _first, InputIterator _last,
 		UnaryPredicate _pred)
 	{
-		if (_first != _last) {
-			for (; _first != _last; ++_first)
-				if (!_pred(*(_first)))
-					return _first;
-		}
+		for (; _first != _last; ++_first)
+			if (!_pred(*(_first)))
+				return _first;
 		return _last;
 	}
 #pragma endregion find
@@ -157,8 +153,7 @@ namespace cckit
 	ForwardIterator adjacent_find(ForwardIterator _first, ForwardIterator _last, BinaryPredicate _pred)
 	{
 		ForwardIterator next = _first;
-		++next;
-		for (; _first != _last; ++_first, ++next) 
+		for (++next; _first != _last; ++_first, ++next)
 			if (_pred(*_first, *next))
 				return _first;
 		return _first;
@@ -212,6 +207,25 @@ namespace cckit
 	ForwardIterator search_n(ForwardIterator _first, ForwardIterator _last
 		, Size _count, const typename iterator_traits<ForwardIterator>::value_type& _val, BinaryPredicate _pred)
 	{
+		Size count;
+		ForwardIterator seqFirst;
+	Proc0:
+		count = 0;
+		seqFirst = _first;
+		for (; _first != _last; ++_first) {
+			if (!_pred(*_first, _val)) {
+				++_first;
+				goto Proc0;
+			}
+			if (++count == _count) // a matching subsequence exists
+				break;
+		}
+		return seqFirst;
+	}
+	/*template<typename ForwardIterator, typename Size, typename BinaryPredicate>
+	ForwardIterator search_n(ForwardIterator _first, ForwardIterator _last
+		, Size _count, const typename iterator_traits<ForwardIterator>::value_type& _val, BinaryPredicate _pred)
+	{
 		Size count = 0;
 		ForwardIterator seqFirst = _first;
 		for (; _first != _last; ++_first) {
@@ -227,7 +241,7 @@ namespace cckit
 		if (_first == _last)
 			seqFirst = _last;
 		return seqFirst;
-	}
+	}*/
 #pragma endregion search_n
 	//! NON-MODIFYING SEQUENCE OPERATION
 
@@ -236,18 +250,20 @@ namespace cckit
 	template<typename InputIterator, typename OutputIterator>
 	OutputIterator copy(InputIterator _first, InputIterator _last, OutputIterator _dFirst)
 	{
-		for (; _first != _last; ++_first, ++_dFirst)
-			*_dFirst = *_first;
+		if (cckit::is_trivially_copyable<cckit::remove_reference_t<decltype(*_first)> >::value
+			&& cckit::is_same<random_access_iterator_tag, iterator_traits<InputIterator>::iterator_category>::value)
+			memcpy(&(*_dFirst), &(*_first), (_last - _first) * sizeof(decltype(*_first)));
+		else
+			for (; _first != _last; ++_first, ++_dFirst)
+				*_dFirst = *_first;
 		return _dFirst;
 	}
 	template<typename InputIterator, typename OutputIterator, typename UnaryPredicate>
 	OutputIterator copy_if(InputIterator _first, InputIterator _last, OutputIterator _dFirst, UnaryPredicate _pred)
 	{
-		while (_first != _last) {
+		while (_first != _last) 
 			if (_pred(*_first))
-				*_dFirst++ = *_first;
-			++_first;
-		}
+				*(_dFirst++) = *(_first++);
 		return _dFirst;
 	}
 	template<typename InputIterator, typename Size, typename OutputIterator>
@@ -616,6 +632,26 @@ namespace cckit
 	//! SORTING OPERATION
 
 	// MIN/MAX OPERATION
+#ifdef min
+	#undef min
+#endif
+#ifdef max
+	#undef max
+#endif
+
+#pragma region min
+	template<typename T, typename Compare>
+	constexpr const T& min(const T& _arg0, const T& _arg1, Compare _compare)
+	{
+		return _compare(_arg0, _arg1) ? _arg0 : _arg1;
+	}
+	template<typename T>
+	constexpr const T& min(const T& _arg0, const T& _arg1)
+	{
+		return min(_arg0, _arg1, cckit::less<T>());
+	}
+#pragma endregion min
+
 #pragma region min_element
 	template<typename ForwardIterator, typename Compare>
 	ForwardIterator min_element(ForwardIterator _first, ForwardIterator _last, Compare _compare)
@@ -636,6 +672,19 @@ namespace cckit
 		return min_element(_first, _last, less<decltype(*_first)>());
 	}
 #pragma endregion min_element
+
+#pragma region max
+	template<typename T, typename Compare>
+	constexpr const T& max(const T& _arg0, const T& _arg1, Compare _compare)
+	{
+		return _compare(_arg0, _arg1) ? _arg0 : _arg1;
+	}
+	template<typename T>
+	constexpr const T& max(const T& _arg0, const T& _arg1)
+	{
+		return max(_arg0, _arg1, cckit::greater<T>());
+	}
+#pragma endregion max
 
 #pragma region max_element
 	template<typename ForwardIterator, typename Compare>
