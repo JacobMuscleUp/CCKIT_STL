@@ -48,10 +48,10 @@ namespace cckit
 		this_type& operator=(this_type&&);
 		template<typename U1, typename U2
 			, typename = enable_if_t<is_assignable<first_type&, const U1&>::value && is_assignable<second_type&, const U2&>::value> >
-		this_type& operator=(const pair<U1, U2>&);
+			this_type& operator=(const pair<U1, U2>&);
 		template<typename U1, typename U2
 			, typename = enable_if_t<is_assignable<first_type&, U1&&>::value && is_assignable<second_type&, U2&&>::value> >
-		this_type& operator=(pair<U1, U2>&&);
+			this_type& operator=(pair<U1, U2>&&);
 
 		template<typename = enable_if_t<is_swappable<first_type>::value && is_swappable<second_type>::value> >
 		void swap(this_type& _other);

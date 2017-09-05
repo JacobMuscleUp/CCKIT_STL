@@ -43,9 +43,14 @@ namespace cckit
 		int mHeight;
 		value_type mVal;
 
+		avltree_node() 
+			: mpLeft(nullptr), mpRight(nullptr), mpParent(nullptr), mpNext(nullptr), mpPrev(nullptr), mpOwner(nullptr), mHeight(0), mVal() {}
 		explicit avltree_node(owner_type* _pOwner, const value_type& _val = value_type())
-			: mpLeft(nullptr), mpRight(nullptr), mpParent(nullptr), mpNext(nullptr), mpPrev(nullptr), mpOwner(_pOwner), mVal(_val) {}
+			: mpLeft(nullptr), mpRight(nullptr), mpParent(nullptr), mpNext(nullptr), mpPrev(nullptr), mpOwner(_pOwner), mHeight(0), mVal(_val) {}
 		avltree_node(const this_type&) = delete;
+
+		void SetLeft(this_type* _pOther) { if (mpLeft = _pOther) { mpLeft->mpParent = this; } }
+		void SetRight(this_type* _pOther) { if (mpRight = _pOther) { mpRight->mpParent = this; } }
 	};
 
 	template<typename Node, typename Pointer, typename Reference>
@@ -116,6 +121,11 @@ namespace cckit
 		typedef cckit::reverse_iterator<iterator> reverse_iterator;
 		typedef cckit::reverse_iterator<const_iterator> const_reverse_iterator;
 
+		// AVL TREE
+	private:
+		static const int MAX_NODE_HEIGHT_DIFF = 1;
+		//! AVL TREE
+	public:
 		avltree() : avltree(key_compare()) {}
 		explicit avltree(const key_compare& _compare, const allocator_type& _allocator = allocator_type());
 
@@ -137,9 +147,33 @@ namespace cckit
 		iterator root();
 		const_iterator root() const;
 
-		pair<iterator, bool> insert(const value_type& _val);
+		size_type size() const { return mSize; }
 
+		pair<iterator, bool> insert(const value_type& _val);
+		pair<iterator, bool> insert(value_type&& _val);
+		iterator insert(const_iterator _hint, const value_type& _val);
+		iterator insert(const_iterator _hint, value_type&& _val);
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value>
+			, typename = typename enable_if_t<is_same<typename iterator_traits<InputIterator>::value_type, value_type>::value> >
+			void insert(InputIterator _first, InputIterator _last);
+		void insert(std::initializer_list<value_type> _ilist);
+
+		template<typename... Args>
+		pair<iterator, bool> emplace(Args&&... _args);
+		template<typename... Args>
+		iterator emplace_hint(const_iterator _hint, Args&&... _args);
+
+		iterator erase(const_iterator _pos);
+		iterator erase(const_iterator _first, const_iterator _last);
+		size_type erase(const key_type& _key);
+
+		void swap(this_type& _other);
 		void clear();
+
+		size_type count(const key_type& _key) const;
+		iterator find(const key_type& _key);
+		const_iterator find(const key_type& _key) const;
 
 		template<class UnaryFunction>
 		void preorder_walk(UnaryFunction _func, const_iterator _root) const;
@@ -149,17 +183,23 @@ namespace cckit
 		void postorder_walk(UnaryFunction _func, const_iterator _root) const;
 
 	protected:
+		node* CreateNode();
 		node* CreateNode(const value_type& _val);
 		void FreeNode(node* _pNode);
 		void CascadeFreeNode(node* _pNode);
 
-		node* Find(const key_type& _key);
-		node* Min(node* _pRoot);
-		node* Max(node* _pRoot);
-		node* ParentSuccessor(node* _pNode);
-		node* ParentPredecessor(node* _pNode);
-		node* Successor(node* _pNode);
-		node* Predecessor(node* _pNode);
+		node* Find(const key_type& _key) { return const_cast<const this_type*>(this)->Find(_key); }
+		node* Find(const key_type& _key) const;
+		node* Min(node* _pRoot) const;
+		node* Max(node* _pRoot) const;
+		node* ParentSuccessor(node* _pNode) const;
+		node* ParentPredecessor(node* _pNode) const;
+		node* Successor(node* _pNode) const;
+		node* Predecessor(node* _pNode) const;
+
+		pair<node*, bool> Insert(node* _pNew, node* _pHint, const key_type& _key = key_type(), bool _bCustomKeyUsed = false);
+		void Transplant(node* _pOld, node* _pNew);
+		node* Erase(node* _pNode);
 
 		template<class UnaryFunction>
 		void PreorderWalk(UnaryFunction _func, node* _pNode) const;
@@ -168,8 +208,18 @@ namespace cckit
 		template<class UnaryFunction>
 		void PostorderWalk(UnaryFunction _func, node* _pNode) const;
 
+		// AVL TREE
+		int Height(node* _pNode) const { return _pNode ? _pNode->mHeight : -1; }
+		void UpdateHeight(node* _pNode) const;
+		void RotateLeft(node* _pRoot);
+		void RotateRight(node* _pRoot);
+		void RotateLeftRight(node* _pRoot);
+		void RotateRightLeft(node* _pRoot);
+		void Balance(node* _pNode);
+		//! AVL TREE
+
 	protected:
-		node* mpSentinel;
+		node* mpSentinel;// mpSentinel->mpParent == root, mpSentinel->mpNext == min, mpSentinel->mpPrev == max
 		size_type mSize;
 		key_compare mCompare;
 		allocator_type mAllocator;
@@ -185,17 +235,17 @@ namespace cckit
 
 #pragma region avltree_iterator<Node, Pointer, Reference>
 	template<typename Node, typename Pointer, typename Reference>
-	avltree_iterator<Node, Pointer, Reference>::avltree_iterator(const node* _pNode)
+	inline avltree_iterator<Node, Pointer, Reference>::avltree_iterator(const node* _pNode)
 		: mpNode(const_cast<node*>(_pNode))
 	{}
 
 	template<typename Node, typename Pointer, typename Reference>
-	avltree_iterator<Node, Pointer, Reference>::avltree_iterator(const this_type& _src)
+	inline avltree_iterator<Node, Pointer, Reference>::avltree_iterator(const this_type& _src)
 		: mpNode(_src.mpNode)
 	{}
 
 	template<typename Node, typename Pointer, typename Reference>
-	typename avltree_iterator<Node, Pointer, Reference>::this_type& 
+	inline typename avltree_iterator<Node, Pointer, Reference>::this_type&
 		avltree_iterator<Node, Pointer, Reference>::operator=(const this_type& _rhs)
 	{
 		mpNode = _rhs.mpNode;
@@ -203,21 +253,21 @@ namespace cckit
 	}
 
 	template<typename Node, typename Pointer, typename Reference>
-	typename avltree_iterator<Node, Pointer, Reference>::reference 
+	inline typename avltree_iterator<Node, Pointer, Reference>::reference
 		avltree_iterator<Node, Pointer, Reference>::operator*() const
 	{
 		return mpNode->mVal;
 	}
 
 	template<typename Node, typename Pointer, typename Reference>
-	typename avltree_iterator<Node, Pointer, Reference>::pointer
+	inline typename avltree_iterator<Node, Pointer, Reference>::pointer
 		avltree_iterator<Node, Pointer, Reference>::operator->() const
 	{
 		return &(**this);
 	}
 
 	template<typename Node, typename Pointer, typename Reference>
-	typename avltree_iterator<Node, Pointer, Reference>::this_type&
+	inline typename avltree_iterator<Node, Pointer, Reference>::this_type&
 		avltree_iterator<Node, Pointer, Reference>::operator++()
 	{
 		mpNode = mpNode->mpOwner->Successor(mpNode);
@@ -225,7 +275,7 @@ namespace cckit
 	}
 
 	template<typename Node, typename Pointer, typename Reference>
-	typename avltree_iterator<Node, Pointer, Reference>::this_type
+	inline typename avltree_iterator<Node, Pointer, Reference>::this_type
 		avltree_iterator<Node, Pointer, Reference>::operator++(int)
 	{
 		this_type temp = *this;
@@ -234,7 +284,7 @@ namespace cckit
 	}
 
 	template<typename Node, typename Pointer, typename Reference>
-	typename avltree_iterator<Node, Pointer, Reference>::this_type&
+	inline typename avltree_iterator<Node, Pointer, Reference>::this_type&
 		avltree_iterator<Node, Pointer, Reference>::operator--()
 	{
 		mpNode = mpNode->mpOwner->Predecessor(mpNode);
@@ -242,7 +292,7 @@ namespace cckit
 	}
 
 	template<typename Node, typename Pointer, typename Reference>
-	typename avltree_iterator<Node, Pointer, Reference>::this_type
+	inline typename avltree_iterator<Node, Pointer, Reference>::this_type
 		avltree_iterator<Node, Pointer, Reference>::operator--(int)
 	{
 		this_type temp = *this;
@@ -254,15 +304,15 @@ namespace cckit
 #pragma region avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-	::avltree(const key_compare& _compare, const allocator_type& _allocator)
+		inline avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::avltree(const key_compare& _compare, const allocator_type& _allocator)
 		: mpSentinel(CreateNode(value_type())), mSize(0)
 		, mCompare(_compare), mAllocator(_allocator), mExtractKey()
 	{}
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::~avltree()
+		inline avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::~avltree()
 	{
 		CascadeFreeNode(mpSentinel->mpParent);
 		FreeNode(mpSentinel);
@@ -270,43 +320,46 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::begin()
 	{
+		return iterator(mpSentinel->mpNext);
 		return iterator(Min(mpSentinel->mpParent));
 	}
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::begin() const
 	{
+		return const_iterator(mpSentinel->mpNext);
 		return const_iterator(Min(mpSentinel->mpParent));
 	}
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::cbegin() const
 	{
+		return const_iterator(mpSentinel->mpNext);
 		return const_iterator(Min(mpSentinel->mpParent));
 	}
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::end()
 	{
 		return iterator(mpSentinel);
 	}
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::end() const
 	{
 		return const_iterator(mpSentinel);
 	}
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::cend() const
 	{
 		return const_iterator(mpSentinel);
@@ -314,21 +367,21 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::reverse_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::reverse_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::rbegin()
 	{
 		return reverse_iterator(end());
 	}
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_reverse_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_reverse_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::rbegin() const
 	{
 		return const_reverse_iterator(end());
 	}
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_reverse_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_reverse_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::crbegin() const
 	{
 		return const_reverse_iterator(end());
@@ -336,21 +389,21 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::reverse_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::reverse_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::rend()
 	{
 		return reverse_iterator(begin());
 	}
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_reverse_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_reverse_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::rend() const
 	{
 		return const_reverse_iterator(begin());
 	}
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_reverse_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_reverse_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::crend() const
 	{
 		return const_reverse_iterator(begin());
@@ -358,14 +411,14 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::root()
 	{
 		return iterator(mpSentinel->mpParent);
 	}
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::root() const
 	{
 		return const_iterator(mpSentinel->mpParent);
@@ -373,84 +426,172 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	pair<typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator, bool> 
+		inline pair<typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator, bool>
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::insert(const value_type& _val)
 	{
-		node *pCurrent = mpSentinel->mpParent, *pPrev = pCurrent;
-		key_type currentKey, newKey = mExtractKey(_val);
-		bool insertionSucceed = true;
-		bool bKeyMin = true, bKeyMax = true;
-
-		while (pCurrent) {
-			pPrev = pCurrent;
-
-			currentKey = mExtractKey(pCurrent->mVal);
-			if (mCompare(currentKey, newKey)) {
-				pCurrent = pCurrent->mpRight;
-				bKeyMin = false;
-			}
-			else if (mCompare(newKey, currentKey)) {
-				pCurrent = pCurrent->mpLeft;
-				bKeyMax = false;
-			}
-			else
-				break;
-		}
-
-		if (mpSentinel->mpParent) {// the tree is not empty
-			if (!pCurrent) {// the insertion takes place at a leaf
-				key_type parentKey = mExtractKey(pPrev->mVal);
-				node* pNew = CreateNode(_val);
-
-				if (mCompare(parentKey, newKey))
-					pPrev->mpRight = pNew;
-				else if (mCompare(newKey, parentKey))
-					pPrev->mpLeft = pNew;
-				pNew->mpParent = pPrev;
-
-				pCurrent = pNew;
-
-				if (bKeyMin)
-					mpSentinel->mpNext = pCurrent;
-				else if (bKeyMax)
-					mpSentinel->mpPrev = pCurrent;
-			}
-			else {// an identical key is encountered
-				if (bUniqueKeys)
-					insertionSucceed = false;
-				else {
-					node* pNew = CreateNode(_val);
-					for (; pCurrent->mpNext; pCurrent = pCurrent->mpNext) {}
-					pCurrent->mpNext = pNew;
-					pNew->mpPrev = pCurrent;
-					pCurrent = pNew;
-				}
-			}
-		}
-		else {// the insertion takes place at the root
-			node* pNew = CreateNode(_val);
-			mpSentinel->mpParent = mpSentinel->mpPrev = mpSentinel->mpNext = pCurrent = pNew;
-			pNew->mpParent = pNew->mpLeft = pNew->mpRight = nullptr;
-		}
-
-		return pair<iterator, bool>(iterator(pCurrent), insertionSucceed);
+		pair<node*, bool> pairResult = cckit::move(Insert(CreateNode(_val), mpSentinel->mpParent));
+		return pair<iterator, bool>(iterator(pairResult.first), pairResult.second);
+	}
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline pair<typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator, bool>
+		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::insert(value_type&& _val)
+	{
+		pair<node*, bool> pairResult = cckit::move(Insert(CreateNode(), mpSentinel->mpParent, mExtractKey(_val), true));
+		pairResult.first->mVal.~value_type();
+		::new(&pairResult.first->mVal) value_type(cckit::forward<value_type>(_val));
+		return pair<iterator, bool>(iterator(pairResult.first), pairResult.second);
+	}
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
+		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::insert(const_iterator _hint, const value_type& _val)
+	{
+		pair<node*, bool> pairResult = cckit::move(Insert(CreateNode(_val), _hint.mpNode));
+		return iterator(pairResult.first);
+	}
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
+		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::insert(const_iterator _hint, value_type&& _val)
+	{
+		return emplace_hint(_hint, cckit::forward<value_type>(_val));
+	}
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		template<typename InputIterator, typename, typename>
+	inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::insert(InputIterator _first, InputIterator _last)
+	{
+		for (; _first != _last; insert(cckit::move(*_first)), ++_first) {}
+	}
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::insert(std::initializer_list<value_type> _ilist)
+	{
+		insert(_ilist.begin(), _ilist.end());
 	}
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		template<typename... Args>
+	inline pair<typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator, bool>
+		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::emplace(Args&&... _args)
+	{
+		node* pNew = CreateNode();
+		pNew->mVal.~value_type();
+		::new(&pNew->mVal) value_type(cckit::forward<Args>(_args)...);
+		pair<node*, bool> pairResult = cckit::move(Insert(pNew, mpSentinel->mpParent));
+		return pair<iterator, bool>(iterator(pairResult.first), pairResult.second);
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		template<typename... Args>
+	inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
+		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::emplace_hint(const_iterator _hint, Args&&... _args)
+	{
+		node* pNew = CreateNode();
+		pNew->mVal.~value_type();
+		::new(&pNew->mVal) value_type(cckit::forward<Args>(_args)...);
+		pair<node*, bool> pairResult = cckit::move(Insert(pNew, _hint.mpNode));
+		return iterator(pairResult.first);
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
+		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::erase(const_iterator _pos)
+	{
+		return iterator(Erase(_pos.mpNode));
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator
+		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::erase(const_iterator _first, const_iterator _last)
+	{
+		iterator first = iterator(_first.mpNode), last = iterator(_last.mpNode);
+		for (; first != last; first = erase(first)) {}
+		return first;
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::size_type
+		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::erase(const key_type& _key)
+	{
+		size_type nCount = 0;
+		if (node* pTarget = Find(_key)) 
+			for (; mExtractKey(pTarget->mVal) == _key; pTarget = Erase(pTarget), ++nCount) {}
+		return nCount;
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::swap(this_type& _other)
+	{
+		cckit::swap(mpSentinel, _other.mpSentinel);
+		cckit::swap(mSize, _other.mSize);
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::clear()
 	{
 		CascadeFreeNode(mpSentinel->mpParent);
 		mpSentinel->mpParent = nullptr;
 		mSize = 0;
+		// ALTERNATIVE
+		//for (auto current = begin(); size() > 0; current = erase(current)) {}
 	}
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	template<class UnaryFunction>
-	void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::size_type
+		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::count(const key_type& _key) const
+	{
+		size_type nCount = 0;
+		for (node* pIdentical = Find(_key); pIdentical; pIdentical = pIdentical->mpNext, ++nCount) {}
+		return nCount;
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::iterator 
+		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::find(const key_type& _key)
+	{
+		node* pIdentical = Find(_key);
+		return iterator(pIdentical ? pIdentical : mpSentinel);
+	}
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::const_iterator 
+		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::find(const key_type& _key) const
+	{
+		node* pIdentical = Find(_key);
+		return const_iterator(pIdentical ? pIdentical : mpSentinel);
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		template<class UnaryFunction>
+	inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::preorder_walk(UnaryFunction _func, const_iterator _root) const
 	{
 		if (_root.mpNode) {
@@ -463,8 +604,8 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	template<class UnaryFunction>
-	void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		template<class UnaryFunction>
+	inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::inorder_walk(UnaryFunction _func, const_iterator _root) const
 	{
 		if (_root.mpNode) {
@@ -477,8 +618,8 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	template<class UnaryFunction>
-	void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		template<class UnaryFunction>
+	inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::postorder_walk(UnaryFunction _func, const_iterator _root) const
 	{
 		if (_root.mpNode) {
@@ -491,7 +632,18 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
+		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::CreateNode()
+	{
+		node* pTemp = new(mAllocator.allocate(sizeof(node))) node();
+		pTemp->mpOwner = const_cast<this_type*>(this);
+		return pTemp;
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::CreateNode(const value_type& _val)
 	{
@@ -500,7 +652,7 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::FreeNode(node* _pNode)
 	{
 		if (_pNode) {
@@ -511,7 +663,7 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-	void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::CascadeFreeNode(node* _pNode)
 	{
 		if (_pNode) {
@@ -525,9 +677,9 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-		::Find(const key_type& _key)
+		::Find(const key_type& _key) const
 	{
 		node* pCurrent = mpSentinel->mpParent;
 
@@ -545,9 +697,9 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-		::Min(node* _pRoot)
+		::Min(node* _pRoot) const
 	{
 		if (_pRoot)
 			for (; _pRoot->mpLeft; _pRoot = _pRoot->mpLeft) {}
@@ -556,9 +708,9 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-		::Max(node* _pRoot)
+		::Max(node* _pRoot) const
 	{
 		if (_pRoot)
 			for (; _pRoot->mpRight; _pRoot = _pRoot->mpRight) {}
@@ -567,9 +719,9 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-		::ParentSuccessor(node* _pNode)
+		::ParentSuccessor(node* _pNode) const
 	{
 		node* pParent = _pNode;
 		if (pParent) {
@@ -583,9 +735,9 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
-		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
+		inline typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-		::ParentPredecessor(node* _pNode)
+		::ParentPredecessor(node* _pNode) const
 	{
 		node* pParent = _pNode;
 		if (pParent) {
@@ -601,10 +753,9 @@ namespace cckit
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
 		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-		::Successor(node* _pNode)
+		::Successor(node* _pNode) const
 	{
-		if (!_pNode)
-			return _pNode;
+		assert((_pNode));
 		if (_pNode == mpSentinel)
 			return _pNode->mpNext;
 		if (_pNode->mpNext)
@@ -623,7 +774,7 @@ namespace cckit
 	, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
 	typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 	avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-	::Successor(node* _pNode)
+	::Successor(node* _pNode) const
 	{
 	if (auto pRightMin = Min(_pNode->mpRight))
 	return pRightMin;
@@ -634,7 +785,7 @@ namespace cckit
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
 		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-		::Predecessor(node* _pNode)
+		::Predecessor(node* _pNode) const
 	{
 		if (!_pNode)
 			return _pNode;
@@ -657,7 +808,7 @@ namespace cckit
 	, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
 	typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
 	avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
-	::predecessor(node* _pNode)
+	::predecessor(node* _pNode) const
 	{
 	if (auto pLeftMax = Max(_pNode->mpLeft))
 	return pLeftMax;
@@ -666,8 +817,176 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		pair<typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*, bool>
+		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::Insert(node* _pNew, node* _pHint, const key_type& _key, bool _bCustomKeyUsed)
+	{
+		node *pCurrent = _pHint, *pPrev = pCurrent;
+		key_type currentKey, newKey = (_bCustomKeyUsed ? _key : mExtractKey(_pNew->mVal));
+		bool bElemInserted = true, bIdenticalKeyEncountered = false;
+		
+		while (pCurrent != mpSentinel->mpParent) {
+			key_type parentKey = mExtractKey(pCurrent->mpParent->mVal);
+			if (mCompare(newKey, parentKey) && pCurrent == pCurrent->mpParent->mpRight){ 
+				pCurrent = pCurrent->mpParent; continue;
+			}
+			if (mCompare(parentKey, newKey) && pCurrent == pCurrent->mpParent->mpLeft) {
+				pCurrent = pCurrent->mpParent; continue;
+			}
+			break;
+		}
+		
+		while (pCurrent) {
+			pPrev = pCurrent;
+			
+			currentKey = mExtractKey(pCurrent->mVal);
+			if (mCompare(currentKey, newKey)) 
+				pCurrent = pCurrent->mpRight;
+			else if (mCompare(newKey, currentKey)) 
+				pCurrent = pCurrent->mpLeft;
+			else
+				break;
+		}
+
+		if (mpSentinel->mpParent) {// the tree is not empty
+			if (!pCurrent) {// the insertion takes place at a leaf
+				key_type parentKey = mExtractKey(pPrev->mVal);
+				
+				if (mCompare(parentKey, newKey))
+					pPrev->mpRight = _pNew;
+				else if (mCompare(newKey, parentKey))
+					pPrev->mpLeft = _pNew;
+				_pNew->mpParent = pPrev;
+
+				pCurrent = _pNew;
+
+				if (mCompare(newKey, mExtractKey(mpSentinel->mpNext->mVal)))// newKey is min
+					mpSentinel->mpNext = pCurrent;
+				else if (mCompare(mExtractKey(mpSentinel->mpPrev->mVal), newKey))// newKey is max
+					mpSentinel->mpPrev = pCurrent;
+			}
+			else {// an identical key is encountered
+				bIdenticalKeyEncountered = true;
+				if (bUniqueKeys) {
+					FreeNode(_pNew);
+					bElemInserted = false;
+				}
+				else {
+					for (; pCurrent->mpNext; pCurrent = pCurrent->mpNext) {}
+					pCurrent->mpNext = _pNew;
+					_pNew->mpPrev = pCurrent;
+					pCurrent = _pNew;
+				}
+			}
+		}
+		else {// the insertion takes place at the root
+			mpSentinel->mpParent = mpSentinel->mpPrev = mpSentinel->mpNext = (pCurrent = _pNew);
+			_pNew->mpParent = _pNew->mpLeft = _pNew->mpRight = nullptr;
+		}
+
+		if (bElemInserted) {
+			++mSize;
+			if (!bIdenticalKeyEncountered) { Balance(pCurrent); }// AVL TREE
+		}
+		return pair<node*, bool>(pCurrent, bElemInserted);
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::Transplant(node* _pOld, node* _pNew)
+	{
+		assert((_pOld));
+		if (!_pOld->mpParent)
+			mpSentinel->mpParent = _pNew;
+		else if (_pOld->mpParent->mpLeft == _pOld)
+			_pOld->mpParent->mpLeft = _pNew;
+		else if (_pOld->mpParent->mpRight == _pOld)
+			_pOld->mpParent->mpRight = _pNew;
+		if (_pNew)
+			_pNew->mpParent = _pOld->mpParent;
+		// ALTERNATIVE
+		/*if (_pNew)
+			_pNew->mpParent = _pOld->mpParent;
+		if (_pOld->mpParent) {
+			if (_pOld->mpParent->mpLeft == _pOld)
+				_pOld->mpParent->mpLeft = _pNew;
+			else if (_pOld->mpParent->mpRight == _pOld)
+				_pOld->mpParent->mpRight = _pNew;
+		}
+		else
+			mpSentinel->mpParent = _pNew;*/
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		typename avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>::node*
+		avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::Erase(node* _pNode)
+	{
+		assert((_pNode));
+		node *pSuccessor = Successor(_pNode), *pBalanceSource = nullptr;
+		
+		if (_pNode->mpPrev || _pNode->mpNext) {
+			if (_pNode->mpNext)
+				_pNode->mpNext->mpPrev = _pNode->mpPrev;
+			if (_pNode->mpPrev) 
+				_pNode->mpPrev->mpNext = _pNode->mpNext;
+			else {
+				_pNode->mpNext->mpParent = _pNode->mpParent;
+				_pNode->mpNext->mpLeft = _pNode->mpLeft;
+				_pNode->mpNext->mpRight = _pNode->mpRight;
+
+				if (_pNode->mpParent) {
+					if (_pNode->mpParent->mpLeft == _pNode)
+						_pNode->mpParent->mpLeft = _pNode->mpNext;
+					else if (_pNode->mpParent->mpRight == _pNode)
+						_pNode->mpParent->mpRight = _pNode->mpNext;
+				}
+				if (_pNode->mpLeft)
+					_pNode->mpLeft->mpParent = _pNode->mpNext;
+				if (_pNode->mpRight)
+					_pNode->mpRight->mpParent = _pNode->mpNext;
+
+				if (mpSentinel->mpParent == _pNode)
+					mpSentinel->mpParent = _pNode->mpNext;
+				if (mpSentinel->mpNext == _pNode)
+					mpSentinel->mpNext = _pNode->mpNext;
+				if (mpSentinel->mpPrev == _pNode)
+					mpSentinel->mpPrev = _pNode->mpNext;
+			}
+		}// if (_pNode->mpPrev || _pNode->mpNext)
+		else if (!_pNode->mpLeft) {
+			Transplant(_pNode, _pNode->mpRight);
+			pBalanceSource = (_pNode->mpRight ? _pNode->mpRight : _pNode->mpParent);// AVL TREE
+		}
+		else if (!_pNode->mpRight) {
+			Transplant(_pNode, _pNode->mpLeft);
+			pBalanceSource = _pNode->mpLeft;// AVL TREE
+		}
+		else {
+			node* pLeftMax = Max(_pNode->mpLeft);
+			pBalanceSource = (pLeftMax->mpParent != _pNode) ? pLeftMax->mpParent : pLeftMax;// AVL TREE
+			if (pLeftMax->mpParent != _pNode) {
+				Transplant(pLeftMax, pLeftMax->mpLeft);
+				pLeftMax->mpLeft = _pNode->mpLeft;
+				pLeftMax->mpLeft->mpParent = pLeftMax;
+			}
+			Transplant(_pNode, pLeftMax);
+			pLeftMax->mpRight = _pNode->mpRight;
+			pLeftMax->mpRight->mpParent = pLeftMax;
+		}
+		FreeNode(_pNode);
+		--mSize;
+		Balance(pBalanceSource);// AVL TREE
+		
+		return pSuccessor;
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
 		template<class UnaryFunction>
-	void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+	inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::PreorderWalk(UnaryFunction _func, node* _pNode) const
 	{
 		if (_pNode) {
@@ -681,7 +1000,7 @@ namespace cckit
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
 		template<class UnaryFunction>
-	void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+	inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::InorderWalk(UnaryFunction _func, node* _pNode) const
 	{
 		if (_pNode) {
@@ -695,7 +1014,7 @@ namespace cckit
 	template<typename Key, typename T, typename Compare, typename Allocator
 		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
 		template<class UnaryFunction>
-	void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+	inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
 		::PostorderWalk(UnaryFunction _func, node* _pNode) const
 	{
 		if (_pNode) {
@@ -703,6 +1022,99 @@ namespace cckit
 			PostorderWalk(_func, _pNode->mpRight);
 			_func(_pNode);
 			PostorderWalk(_func, _pNode->mpNext);
+		}
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::UpdateHeight(node* _pNode) const
+	{
+		assert((_pNode));
+		_pNode->mHeight = cckit::max(Height(_pNode->mpLeft), Height(_pNode->mpRight)) + 1;
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::RotateLeft(node* _pRoot)
+	{
+		assert((_pRoot));
+		assert((_pRoot->mpRight));
+
+		node *pRight = _pRoot->mpRight, *pParent = _pRoot->mpParent;
+
+		Transplant(_pRoot, pRight);// this statement must precede "pRight->SetLeft(_pRoot)" which modifies _pRoot->mpParent
+		_pRoot->SetRight(pRight->mpLeft);
+		pRight->SetLeft(_pRoot);
+		
+		UpdateHeight(pRight->mpLeft);
+		UpdateHeight(pRight);
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::RotateRight(node* _pRoot)
+	{
+		assert((_pRoot));
+		assert((_pRoot->mpLeft));
+
+		node *pLeft = _pRoot->mpLeft; 
+
+		Transplant(_pRoot, pLeft);// this statement must precede "pLeft->SetRight(_pRoot);" which modifies _pRoot->mpParent
+		_pRoot->SetLeft(pLeft->mpRight);
+		pLeft->SetRight(_pRoot);
+
+		UpdateHeight(pLeft->mpRight);
+		UpdateHeight(pLeft);
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::RotateLeftRight(node* _pRoot)
+	{
+		assert((_pRoot));
+		RotateLeft(_pRoot->mpLeft);
+		RotateRight(_pRoot);
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		inline void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::RotateRightLeft(node* _pRoot)
+	{
+		assert((_pRoot));
+		RotateRight(_pRoot->mpRight);
+		RotateLeft(_pRoot);
+	}
+
+	template<typename Key, typename T, typename Compare, typename Allocator
+		, typename ExtractKey, bool bMutableIterators, bool bUniqueKeys>
+		void avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>
+		::Balance(node* _pNode)
+	{
+		if (_pNode) {
+			UpdateHeight(_pNode);
+
+			node *pLeft = _pNode->mpLeft, *pRight = _pNode->mpRight;
+			if (Height(pLeft) - Height(pRight) > MAX_NODE_HEIGHT_DIFF) {
+				node *pLeftLeft = pLeft->mpLeft, *pLeftRight = pLeft->mpRight;
+				if (Height(pLeftLeft) >= Height(pLeftRight))
+					RotateRight(_pNode);
+				else
+					RotateLeftRight(_pNode);
+			}
+			else if (Height(pRight) - Height(pLeft) > MAX_NODE_HEIGHT_DIFF) {
+				node *pRightRight = pRight->mpRight, *pRightLeft = pRight->mpLeft;
+				if (Height(pRightRight) >= Height(pRightLeft))
+					RotateLeft(_pNode);
+				else
+					RotateRightLeft(_pNode);
+			}
+
+			Balance(_pNode->mpParent);
 		}
 	}
 #pragma endregion avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys>

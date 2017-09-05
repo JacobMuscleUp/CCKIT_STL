@@ -95,7 +95,7 @@ namespace cckit
 		iterator insert(const_iterator _pos, size_type _count, const value_type& _val);
 		template<typename InputIterator
 			, typename = typename enable_if_t<is_iterator<InputIterator>::value> >
-		iterator insert(const_iterator _pos, InputIterator _first, InputIterator _last);
+			iterator insert(const_iterator _pos, InputIterator _first, InputIterator _last);
 		iterator insert(const_iterator _pos, std::initializer_list<value_type> _ilist);
 
 		template <typename... Args>
@@ -158,7 +158,7 @@ namespace cckit
 	{
 		if (mSize == 0) return;
 		mArray = Allocate(mCap);
-		fill_n(mArray, mSize, _val);
+		cckit::fill_n(mArray, mSize, _val);
 	}
 	template<typename T, typename Allocator>
 	inline vector<T, Allocator>::vector(size_type _size, const allocator_type& _allocator)
@@ -175,7 +175,7 @@ namespace cckit
 	{
 		if (mSize == 0) return;
 		mArray = Allocate(mCap = mSize);
-		copy(_first, _last, mArray);
+		cckit::copy(_first, _last, mArray);
 	}
 	template<typename T, typename Allocator>
 	inline vector<T, Allocator>::vector(const this_type& _src, const allocator_type& _allocator)
