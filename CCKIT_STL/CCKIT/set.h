@@ -32,7 +32,30 @@ namespace cckit
 
 	public:
 		set() : set(key_compare()) {}
-		explicit set(const key_compare& _compare, const allocator_type& _allocator = allocator_type());
+		explicit set(const key_compare& _compare, const allocator_type& _allocator = allocator_type())
+			: base_type(_compare, _allocator) {}
+		explicit set(const allocator_type& _allocator)
+			: base_type(_allocator) {}
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value>
+			, typename = typename enable_if_t<is_same<typename iterator_traits<InputIterator>::value_type, value_type>::value> >
+			set(InputIterator _first, InputIterator _last
+				, const key_compare& _compare = key_compare(), const allocator_type& _allocator = allocator_type())
+			: base_type(_first, _last, _compare, _allocator) {}
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value>
+			, typename = typename enable_if_t<is_same<typename iterator_traits<InputIterator>::value_type, value_type>::value> >
+			set(InputIterator _first, InputIterator _last, const allocator_type& _allocator)
+			: set(_first, _last, key_compare(), _allocator) {}
+		set(const this_type& _other, const allocator_type& _allocator = allocator_type())
+			: base_type(_other, _allocator) {}
+		set(this_type&& _other, const allocator_type& _allocator = allocator_type())
+			: base_type(cckit::move(_other), _allocator) {}
+		set(std::initializer_list<value_type> _ilist
+			, const key_compare& _compare = key_compare(), const allocator_type& _allocator = allocator_type())
+			: base_type(_ilist, _compare, _allocator) {}
+		set(std::initializer_list<value_type> _ilist, const allocator_type& _allocator)
+			: set(_ilist, key_compare(), _allocator) {}
 	};
 
 	template<typename Key, typename Compare = less<Key>, typename Allocator = allocator
@@ -61,24 +84,47 @@ namespace cckit
 
 	public:
 		multiset() : multiset(key_compare()) {}
-		explicit multiset(const key_compare& _compare, const allocator_type& _allocator = allocator_type());
+		explicit multiset(const key_compare& _compare, const allocator_type& _allocator = allocator_type())
+			: base_type(_compare, _allocator) {}
+		explicit multiset(const allocator_type& _allocator)
+			: base_type(_allocator) {}
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value>
+			, typename = typename enable_if_t<is_same<typename iterator_traits<InputIterator>::value_type, value_type>::value> >
+			multiset(InputIterator _first, InputIterator _last
+				, const key_compare& _compare = key_compare(), const allocator_type& _allocator = allocator_type())
+			: base_type(_first, _last, _compare, _allocator) {}
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value>
+			, typename = typename enable_if_t<is_same<typename iterator_traits<InputIterator>::value_type, value_type>::value> >
+			multiset(InputIterator _first, InputIterator _last, const allocator_type& _allocator)
+			: multiset(_first, _last, key_compare(), _allocator) {}
+		multiset(const this_type& _other, const allocator_type& _allocator = allocator_type())
+			: base_type(_other, _allocator) {}
+		multiset(this_type&& _other, const allocator_type& _allocator = allocator_type())
+			: base_type(cckit::move(_other), _allocator) {}
+		multiset(std::initializer_list<value_type> _ilist
+			, const key_compare& _compare = key_compare(), const allocator_type& _allocator = allocator_type())
+			: base_type(_ilist, _compare, _allocator) {}
+		multiset(std::initializer_list<value_type> _ilist, const allocator_type& _allocator)
+			: multiset(_ilist, key_compare(), _allocator) {}
 	};
 }
 
 namespace cckit
 {
 #pragma region set<Key, Compare, Allocator, DataStructure>
-	template<typename Key, typename Compare, typename Allocator, typename DataStructure>
+	/*template<typename Key, typename Compare, typename Allocator, typename DataStructure>
 	set<Key, Compare, Allocator, DataStructure>::set(const key_compare& _compare, const allocator_type& _allocator)
 		: base_type(_compare, _allocator)
-	{}
+	{}*/
 #pragma endregion set<Key, Compare, Allocator, DataStructure>
 
 #pragma region multiset<Key, Compare, Allocator, DataStructure>
-	template<typename Key, typename Compare, typename Allocator, typename DataStructure>
+	/*template<typename Key, typename Compare, typename Allocator, typename DataStructure>
 	multiset<Key, Compare, Allocator, DataStructure>::multiset(const key_compare& _compare, const allocator_type& _allocator)
 		: base_type(_compare, _allocator)
-	{}
+	{}*/
 #pragma endregion multiset<Key, Compare, Allocator, DataStructure>
 }
 

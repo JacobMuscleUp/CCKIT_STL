@@ -355,28 +355,22 @@ void test_setmap()
 	//cckit::pair<const int, std::string> array0[] = { cckit::make_pair(17, "17th"), cckit::make_pair(27, "27th") };
 	tree1.insert(list0.begin(), list0.end());
 	
-	/*for (auto current = tree1.begin(); tree1.size() > 0; current = tree1.erase(current)) {}
-	tree1.insert(cckit::make_pair(7, "7th"));
-	tree1.insert(cckit::make_pair(2, "2nd"));
-	tree1.insert(cckit::make_pair(3, "3rd"));
-	tree1.insert(cckit::make_pair(3, "3rd"));*/
 	cout << "erase(4) = " << tree1.erase(4) << endl;
 	cout << "erase(13) = " << tree1.erase(13) << endl;
 	cout << "erase(1) = " << tree1.erase(1) << endl;
 	
 	tree1.erase(tree1.find(3), tree1.find(20));
-	decltype(tree1) tree2; 
-	tree1.swap(tree2);
+	
 	cout << "size = " << tree1.size() << endl;
 	
 	tree1.preorder_walk([](treetype1::iterator _current) {
 		cout << "(" << _current->first << ", " << _current->second << ")" << endl;
 	}, tree1.root());
 	cout << endl;
-	/*tree1.preorder_walk([](treetype1::iterator _current) {
+	tree1.preorder_walk([](treetype1::iterator _current) {
 		cout << _current.mpNode->mHeight << endl;
 	}, tree1.root());
-	cout << endl;*/
+	cout << endl;
 	tree1.inorder_walk([](treetype1::iterator _current) {
 		cout << "(" << _current->first << ", " << _current->second << ")" << endl;
 	}, tree1.root());
@@ -415,6 +409,9 @@ public:
 
 	//B() { cout << "B ctor" << endl; }
 	explicit B(A _a = A()) : mA(_a) { cout << "B ctor" << endl; }
+
+	void func() const { cout << "const" << endl; }
+	void func() { cout << "non-const" << endl; const_cast<const B*>(this)->func(); }
 };
 
 int main()
@@ -422,30 +419,62 @@ int main()
 	
 	int temp;
 	
-	/*cckit::multiset<int> tree0;
+	cckit::multiset<int> tree0;
 	//cckit::set<int> tree0;
-	typedef decltype(tree0) treetype;
 
 	tree0.insert(4);
 	tree0.insert(1);
 	tree0.insert(1);
-	auto pair1 = tree0.insert(7);
+	tree0.insert(7);
 	tree0.insert(2);
 	tree0.insert(2);
-	auto pair0 = tree0.insert(2);
+	tree0.insert(2);
 	tree0.insert(3);
-	tree0.emplace(5);
 
-	for (auto current = tree0.find(4); current != tree0.cend(); current++)
+	tree0.emplace(5);
+	
+	decltype(tree0) tree1 = { 3, 6, 3, 1, 9, 3, 3, 15 };
+	decltype(tree0) tree2 = cckit::move(tree1);
+	tree2.swap(tree0);
+	//auto rangePair = tree0.equal_range(3);
+
+	cout << "tree0" << endl;
+	cout << "size = " << tree0.size() << endl;
+	for (auto current = tree0.begin(), end = tree0.end(); current != end; current++)
 		cout << *current << endl;
+	cout << endl;
+	for (auto current = tree0.begin(), end = tree0.end(); current != end; current++)
+		cout << current.mpNode->mHeight << endl;
 	cout << endl;
 	for (auto current = tree0.rbegin(); current != tree0.rend(); ++current)
 		cout << *current << endl;
 	cout << endl;
-	for (auto current = ----tree0.begin(); current != tree0.end(); current--)
-		cout << *current << endl;*/
+
+	cout << "tree1" << endl;
+	cout << "size = " << tree1.size() << endl;
+	for (auto current = tree1.begin(), end = tree1.end(); current != end; current++)
+		cout << *current << endl;
+	cout << endl;
+	for (auto current = tree1.begin(), end = tree1.end(); current != end; current++)
+		cout << current.mpNode->mHeight << endl;
+	cout << endl;
+	for (auto current = tree1.rbegin(); current != tree1.rend(); ++current)
+		cout << *current << endl;
+	cout << endl;
+
+	cout << "tree2" << endl;
+	cout << "size = " << tree2.size() << endl;
+	for (auto current = tree2.begin(), end = tree2.end(); current != end; current++)
+		cout << *current << endl;
+	cout << endl;
+	for (auto current = tree2.begin(), end = tree2.end(); current != end; current++)
+		cout << current.mpNode->mHeight << endl;
+	cout << endl;
+	for (auto current = tree2.rbegin(); current != tree2.rend(); ++current)
+		cout << *current << endl;
+	cout << endl;
 	
-	test_setmap();
+	//test_setmap();
 	//test_vector();
 	//test_graph();
 	//test_algorithm();

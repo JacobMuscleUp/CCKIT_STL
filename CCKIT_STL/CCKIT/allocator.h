@@ -16,9 +16,9 @@ namespace cckit
 		allocator(const allocator& _src, const char* _pName = nullptr);
 		allocator& operator=(const allocator& _rhs);
 
-		void* allocate(size_t _sz, int _flags = 0);
-		void* allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags = 0);
-		void deallocate(void* _pTarget);
+		void* allocate(size_t _sz, int _flags = 0) const;
+		void* allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags = 0) const;
+		void deallocate(void* _pTarget) const;
 
 		const char* get_name() const;
 		void set_name(const char* _pName);
@@ -36,9 +36,9 @@ namespace cckit
 	class allocator_malloc : public allocator
 	{
 	public:
-		void* allocate(size_t _sz, int _flags = 0);
-		void* allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags = 0);
-		void deallocate(void* _pTarget);
+		void* allocate(size_t _sz, int _flags = 0) const;
+		void* allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags = 0) const;
+		void deallocate(void* _pTarget) const;
 	};
 	bool operator==(const allocator_malloc& a, const allocator_malloc& b);
 	bool operator!=(const allocator_malloc& a, const allocator_malloc& b);
@@ -80,7 +80,7 @@ namespace cckit
 #pragma endregion allocator::operator=
 
 #pragma region allocator::allocate
-	inline void* allocator::allocate(size_t _sz, int _flags)
+	inline void* allocator::allocate(size_t _sz, int _flags) const
 	{
 	#if CCKIT_DEBUG
 		return ::operator new(_sz, __FILE__, __LINE__);
@@ -88,7 +88,7 @@ namespace cckit
 		return ::operator new(_sz);
 	#endif
 	}
-	inline void* allocator::allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags)
+	inline void* allocator::allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags) const
 	{
 	#if CCKIT_DEBUG
 		return ::operator new(_sz, __FILE__, __LINE__);
@@ -99,7 +99,7 @@ namespace cckit
 #pragma endregion allocator::allocate
 
 #pragma region allocator::deallocate
-	void allocator::deallocate(void* _pTarget)
+	void allocator::deallocate(void* _pTarget) const
 	{
 	#if CCKIT_DEBUG
 		return ::operator delete(_pTarget, __FILE__, __LINE__);
@@ -133,18 +133,18 @@ namespace cckit
 	bool operator!=(const allocator& a, const allocator& b) { return false; }
 
 #pragma region allocator_malloc::allocate
-	inline void* allocator_malloc::allocate(size_t _sz, int _flags)
+	inline void* allocator_malloc::allocate(size_t _sz, int _flags) const
 	{
 		return std::malloc(_sz);
 	}
-	inline void* allocator_malloc::allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags)
+	inline void* allocator_malloc::allocate(size_t _sz, size_t _alignment, size_t _offset, int _flags) const
 	{
 		return std::malloc(_sz);
 	}
 #pragma endregion allocator_malloc::allocate
 
 #pragma region allocator_malloc::deallocate
-	void allocator_malloc::deallocate(void* _pTarget)
+	void allocator_malloc::deallocate(void* _pTarget) const
 	{
 		std::free(_pTarget);
 	}

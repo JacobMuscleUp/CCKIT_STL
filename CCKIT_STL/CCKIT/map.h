@@ -32,7 +32,30 @@ namespace cckit
 
 	public:
 		map() : map(key_compare()) {}
-		explicit map(const key_compare& _compare, const allocator_type& _allocator = allocator_type());
+		explicit map(const key_compare& _compare, const allocator_type& _allocator = allocator_type())
+			: base_type(_compare, _allocator) {}
+		explicit map(const allocator_type& _allocator)
+			: base_type(_allocator) {}
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value>
+			, typename = typename enable_if_t<is_same<typename iterator_traits<InputIterator>::value_type, value_type>::value> >
+			map(InputIterator _first, InputIterator _last
+				, const key_compare& _compare = key_compare(), const allocator_type& _allocator = allocator_type())
+			: base_type(_first, _last, _compare, _allocator) {}
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value>
+			, typename = typename enable_if_t<is_same<typename iterator_traits<InputIterator>::value_type, value_type>::value> >
+			map(InputIterator _first, InputIterator _last, const allocator_type& _allocator)
+			: map(_first, _last, key_compare(), _allocator) {}
+		map(const this_type& _other, const allocator_type& _allocator = allocator_type())
+			: base_type(_other, _allocator) {}
+		map(this_type&& _other, const allocator_type& _allocator = allocator_type())
+			: base_type(cckit::move(_other), _allocator) {}
+		map(std::initializer_list<value_type> _ilist
+			, const key_compare& _compare = key_compare(), const allocator_type& _allocator = allocator_type())
+			: base_type(_ilist, _compare, _allocator) {}
+		map(std::initializer_list<value_type> _ilist, const allocator_type& _allocator)
+			: map(_ilist, key_compare(), _allocator) {}
 	};
 
 	template<typename Key, typename T, typename Compare = less<Key>, typename Allocator = allocator
@@ -61,24 +84,47 @@ namespace cckit
 
 	public:
 		multimap() : multimap(key_compare()) {}
-		explicit multimap(const key_compare& _compare, const allocator_type& _allocator = allocator_type());
+		explicit multimap(const key_compare& _compare, const allocator_type& _allocator = allocator_type())
+			: base_type(_compare, _allocator) {}
+		explicit multimap(const allocator_type& _allocator)
+			: base_type(_allocator) {}
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value>
+			, typename = typename enable_if_t<is_same<typename iterator_traits<InputIterator>::value_type, value_type>::value> >
+			multimap(InputIterator _first, InputIterator _last
+				, const key_compare& _compare = key_compare(), const allocator_type& _allocator = allocator_type())
+			: base_type(_first, _last, _compare, _allocator) {}
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value>
+			, typename = typename enable_if_t<is_same<typename iterator_traits<InputIterator>::value_type, value_type>::value> >
+			multimap(InputIterator _first, InputIterator _last, const allocator_type& _allocator)
+			: multimap(_first, _last, key_compare(), _allocator) {}
+		multimap(const this_type& _other, const allocator_type& _allocator = allocator_type())
+			: base_type(_other, _allocator) {}
+		multimap(this_type&& _other, const allocator_type& _allocator = allocator_type())
+			: base_type(cckit::move(_other), _allocator) {}
+		multimap(std::initializer_list<value_type> _ilist
+			, const key_compare& _compare = key_compare(), const allocator_type& _allocator = allocator_type())
+			: base_type(_ilist, _compare, _allocator) {}
+		multimap(std::initializer_list<value_type> _ilist, const allocator_type& _allocator)
+			: multimap(_ilist, key_compare(), _allocator) {}
 	};
 }
 
 namespace cckit
 {
 #pragma region map<Key, T, Compare, Allocator, DataStructure>
-	template<typename Key, typename T, typename Compare, typename Allocator, typename DataStructure>
+	/*template<typename Key, typename T, typename Compare, typename Allocator, typename DataStructure>
 	map<Key, T, Compare, Allocator, DataStructure>::map(const key_compare& _compare, const allocator_type& _allocator)
 		: base_type(_compare, _allocator)
-	{}
+	{}*/
 #pragma endregion map<Key, T, Compare, Allocator, DataStructure>
 
 #pragma region multimap<Key, T, Compare, Allocator, DataStructure>
-	template<typename Key, typename T, typename Compare, typename Allocator, typename DataStructure>
+	/*template<typename Key, typename T, typename Compare, typename Allocator, typename DataStructure>
 	multimap<Key, T, Compare, Allocator, DataStructure>::multimap(const key_compare& _compare, const allocator_type& _allocator)
 		: base_type(_compare, _allocator)
-	{}
+	{}*/
 #pragma endregion multimap<Key, T, Compare, Allocator, DataStructure>
 }
 
