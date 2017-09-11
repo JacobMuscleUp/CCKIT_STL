@@ -121,7 +121,7 @@ namespace cckit
 
 	private:
 		value_type* Allocate(size_type _count);
-		void Deallocate(value_type* _ptr, size_type _count);
+		void Deallocate(value_type* _ptr);
 		void Reserve(size_type _cap);
 
 	private:
@@ -157,8 +157,15 @@ namespace cckit
 		, mAllocator(_allocator)
 	{
 		if (mSize == 0) return;
-		mArray = Allocate(mCap);
-		cckit::fill_n(mArray, mSize, _val);
+
+		try {
+			mArray = Allocate(mCap);
+			cckit::uninitialized_fill_n(mArray, mSize, _val);
+		}
+		catch (...) {
+			Deallocate(mArray);
+			throw;
+		}
 	}
 	template<typename T, typename Allocator>
 	inline vector<T, Allocator>::vector(size_type _size, const allocator_type& _allocator)
@@ -169,13 +176,19 @@ namespace cckit
 		, typename = typename enable_if_t<is_iterator<InputIterator>::value> >
 		inline vector<T, Allocator>::vector(InputIterator _first, InputIterator _last, const allocator_type& _allocator)
 		: mArray(nullptr)
-		, mCap(0)
 		, mSize(cckit::distance(_first, _last))
 		, mAllocator(_allocator)
 	{
 		if (mSize == 0) return;
-		mArray = Allocate(mCap = mSize);
-		cckit::copy(_first, _last, mArray);
+
+		try {
+			mArray = Allocate(mCap = mSize);
+			cckit::uninitialized_copy(_first, _last, mArray);
+		}
+		catch (...) {
+			Deallocate(mArray);
+			throw;
+		}
 	}
 	template<typename T, typename Allocator>
 	inline vector<T, Allocator>::vector(const this_type& _src, const allocator_type& _allocator)
@@ -185,8 +198,15 @@ namespace cckit
 		, mAllocator(_allocator)
 	{
 		if (mSize == 0) return;
-		mArray = Allocate(mCap); 
-		cckit::copy(_src.mArray, _src.mArray + mSize, mArray);
+		
+		try {
+			mArray = Allocate(mCap);
+			cckit::uninitialized_copy(_src.mArray, _src.mArray + mSize, mArray);
+		}
+		catch (...) {
+			Deallocate(mArray);
+			throw;
+		}
 	}
 	template<typename T, typename Allocator>
 	inline vector<T, Allocator>::vector(this_type&& _src, const allocator_type& _allocator)
@@ -208,7 +228,8 @@ namespace cckit
 	template<typename T, typename Allocator>
 	inline vector<T, Allocator>::~vector()
 	{
-		Deallocate(mArray, mCap);
+		cckit::destroy(mArray, mArray + mSize);
+		Deallocate(mArray);
 	}
 #pragma endregion vector<T, Allocator>::~vector
 
@@ -242,9 +263,8 @@ namespace cckit
 	template<typename T, typename Allocator>
 	inline void vector<T, Allocator>::assign(size_type _size, const value_type& _val)
 	{
-		Deallocate(mArray, mCap);
-		mArray = Allocate(mCap = mSize = _size);
-		fill_n(mArray, mSize, _val);
+		this_type temp(_size, _val, mAllocator);
+		swap(temp);
 	}
 	template<typename T, typename Allocator>
 	template<typename InputIterator
@@ -399,7 +419,8 @@ namespace cckit
 	template<typename T, typename Allocator>
 	inline void vector<T, Allocator>::clear()
 	{
-		Deallocate(mArray, mCap);
+		cckit::destroy(mArray, mArray + mSize);
+		Deallocate(mArray);
 		mArray = nullptr;
 		mCap = mSize = 0;
 	}
@@ -505,14 +526,10 @@ namespace cckit
 		
 		if (newSize > mCap)
 			reserve(2 * newSize);
-		iterator current = end();
-		for (iterator newPos = mArray + offset; current != newPos; --current)
-			*current = *(current - 1);
-		current->~value_type();
-		::new(current) value_type(cckit::move(_val));
+		
+		iterator insertPos = cckit::initialized_insert_n(mArray + offset, mArray + mSize, cckit::move(_val));
 		mSize = newSize;
-
-		return current;
+		return insertPos;
 	}
 	template<typename T, typename Allocator>
 	inline typename vector<T, Allocator>::iterator
@@ -523,14 +540,10 @@ namespace cckit
 		
 		if (newSize > mCap)
 			reserve(2 * newSize);
-		iterator current = end();
-		for (iterator newPos = mArray + offset; current != newPos; --current)
-			*(current - 1 + _count) = *(current - 1);
-		for (size_type i = 0; i < _count; ++i, ++current)
-			*current = _val;
-		mSize = newSize;
 
-		return current;
+		iterator insertPos = cckit::initialized_insert_n(mArray + offset, mArray + mSize, _count, _val);
+		mSize = newSize;
+		return insertPos;
 	}
 	template<typename T, typename Allocator>
 	template<typename InputIterator
@@ -538,20 +551,15 @@ namespace cckit
 		inline typename vector<T, Allocator>::iterator
 		vector<T, Allocator>::insert(const_iterator _pos, InputIterator _first, InputIterator _last)
 	{
-		difference_type offset = _pos - begin()
-			, count = cckit::distance(_first, _last);
-		size_type newSize = mSize + count;
+		difference_type offset = _pos - begin();
+		size_type newSize = mSize + cckit::distance(_first, _last);
 
 		if (newSize > mCap)
 			reserve(2 * newSize);
-		iterator current = end();
-		for (iterator newPos = mArray + offset; current != newPos; --current)
-			*(current - 1 + count) = *(current - 1);
-		for (; _first != _last; ++_first, ++current)
-			*current = *_first;
-		mSize = newSize;
 
-		return current;
+		iterator insertPos = cckit::initialized_insert(_first, _last, mArray + offset, mArray + mSize);
+		mSize = newSize;
+		return insertPos;
 	}
 	template<typename T, typename Allocator>
 	inline typename vector<T, Allocator>::iterator
@@ -572,14 +580,10 @@ namespace cckit
 		
 		if (newSize > mCap)
 			reserve(2 * newSize);
-		iterator current = end();
-		for (iterator newPos = mArray + offset; current != newPos; --current)
-			*current = *(current - 1);
-		current->~value_type();
-		::new(current) value_type(cckit::forward<Args>(_args)...);
-		mSize = newSize;
 
-		return current;
+		iterator insertPos = cckit::initialized_emplace(mArray + offset, mArray + mSize, cckit::forward<Args>(_args)...);
+		mSize = newSize;
+		return insertPos;
 	}
 #pragma endregion vector<T, Allocator>::emplace
 
@@ -600,13 +604,11 @@ namespace cckit
 		if (count > 0 && mSize > 0) {
 			if (3 * newSize <= mCap)
 				Reserve(2 * newSize);
-			iterator current = mArray + offset;
-			for (iterator endPos = end(); current != endPos; ++current)
-				*current = *(current + count);
+			iterator temp = cckit::initialized_erase(mArray + offset, count, mArray + mSize);
 			mSize = newSize;
+			return temp;
 		}
-
-		return mArray + offset;
+		return end();
 	}
 #pragma endregion vector<T, Allocator>::erase
 
@@ -638,7 +640,8 @@ namespace cckit
 	template<typename T, typename Allocator>
 	inline void vector<T, Allocator>::pop_back()
 	{
-		erase(cend());
+		iterator temp = end();
+		erase(--temp);
 	}
 #pragma endregion vector<T, Allocator>::pop_back
 
@@ -650,10 +653,8 @@ namespace cckit
 		
 		if (difference > 0)
 			insert(cend(), difference, _val);
-		else if (difference < 0) {
-			for (; difference != 0; ++difference)
-				pop_back();
-		}
+		else if (difference < 0) 
+			for (; difference != 0; pop_back(), ++difference) {}
 	}
 #pragma endregion vector<T, Allocator>::resize
 
@@ -694,22 +695,16 @@ namespace cckit
 	inline typename vector<T, Allocator>::value_type* 
 		vector<T, Allocator>::Allocate(size_type _count)
 	{
-		value_type* pTemp =  ::new(mAllocator.allocate(_count * sizeof(value_type))) value_type;
-		for (size_type i = 1; i < _count; ++i)
-			::new(pTemp + i) value_type;
-		return pTemp;
+		return static_cast<value_type*>(mAllocator.allocate(_count * sizeof(value_type)));
 	}
 #pragma endregion vector<T, Allocator>::Allocate
 
 #pragma region vector<T, Allocator>::Deallocate
 	template<typename T, typename Allocator>
-	inline void vector<T, Allocator>::Deallocate(value_type* _ptr, size_type _count)
+	inline void vector<T, Allocator>::Deallocate(value_type* _ptr)
 	{
-		if (_ptr) {
-			for (size_type i = 0; i < _count; ++i)
-				(_ptr + i)->~value_type();
+		if (_ptr) 
 			mAllocator.deallocate(_ptr);
-		}
 	}
 #pragma endregion vector<T, Allocator>::Deallocate
 
@@ -719,8 +714,9 @@ namespace cckit
 	{
 		value_type* tempArray = Allocate(_cap);
 		if (mArray) {
-			cckit::copy(mArray, mArray + (cckit::min)(mSize, _cap), tempArray);
-			Deallocate(mArray, mCap);
+			cckit::uninitialized_copy(mArray, mArray + (cckit::min)(mSize, _cap), tempArray);
+			cckit::destroy(mArray, mArray + mSize);
+			Deallocate(mArray);
 		}
 		mArray = tempArray;
 		mCap = _cap;

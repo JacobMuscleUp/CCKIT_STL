@@ -223,6 +223,19 @@ namespace cckit
 	{
 		const result_type& operator()(const argument_type& _arg) const { return _arg.first; }
 	};
+
+	template<std::size_t Index, typename Head, typename... Tail, enable_if_t<Index == 0, int> = 0>
+	auto arg_at(Head&& _head, Tail&&... _tail) noexcept
+		-> decltype(cckit::forward<Head>(_head))
+	{
+		return cckit::forward<Head>(_head);
+	}
+	template<std::size_t Index, typename Head, typename... Tail, enable_if_t<Index != 0, int> = 0>
+	auto arg_at(Head&& _head, Tail&&... _tail) noexcept
+		-> decltype(arg_at<Index - 1>(cckit::forward<Tail>(_tail)...))
+	{
+		return arg_at<Index - 1>(cckit::forward<Tail>(_tail)...);
+	}
 }
 
 #endif // !CCKIT_UTILITY_H

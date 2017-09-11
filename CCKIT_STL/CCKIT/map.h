@@ -56,6 +56,44 @@ namespace cckit
 			: base_type(_ilist, _compare, _allocator) {}
 		map(std::initializer_list<value_type> _ilist, const allocator_type& _allocator)
 			: map(_ilist, key_compare(), _allocator) {}
+
+		this_type& operator=(const this_type& _rhs) { static_cast<base_type&>(*this) = _rhs; return *this; }
+		this_type& operator=(this_type&& _rhs) { static_cast<base_type&>(*this) = cckit::forward<this_type>(_rhs); return *this; }
+		this_type& operator=(std::initializer_list<value_type> _ilist) { static_cast<base_type&>(*this) = _ilist; return *this; }
+
+		template<typename... Args>
+		pair<iterator, bool> try_emplace(Args&&... _args)
+		{
+			key_type key = cckit::arg_at<0>(cckit::forward<Args>(_args)...);
+			iterator lowerBound = lower_bound(key);
+			if (lowerBound == end() || key_comp()(key, lowerBound->first)) 
+				return pair<iterator, bool>(emplace_hint(lowerBound, cckit::forward<Args>(_args)...), true);
+			return pair<iterator, bool>(lowerBound, false);
+		}
+
+		template<typename U>
+		pair<iterator, bool> insert_or_assign(const key_type& _key, U&& _obj)
+		{
+			iterator lowerBound = lower_bound(_key);
+			if (lowerBound == end() || key_comp()(_key, lowerBound->first))
+				return pair<iterator, bool>(emplace_hint(lowerBound, _key, cckit::forward<U>(_obj)), true);
+			lowerBound->second = cckit::forward<U>(_obj);
+			return pair<iterator, bool>(lowerBound, false);
+		}
+
+		mapped_type& at(const key_type& _key)
+		{
+			iterator lowerBound = lower_bound(_key);
+			if (lowerBound == end() || key_comp()(_key, lowerBound->first))
+				throw std::out_of_range("invalid key for map::at");
+			return lowerBound->second;
+		}
+		const mapped_type& at(const key_type& _key) const { return (const_cast<this_type*>(this))->at(_key); }
+
+		mapped_type& operator[](const key_type& _key)
+		{
+			return try_emplace(_key, mapped_type()).first->second;
+		}
 	};
 
 	template<typename Key, typename T, typename Compare = less<Key>, typename Allocator = allocator
@@ -108,6 +146,10 @@ namespace cckit
 			: base_type(_ilist, _compare, _allocator) {}
 		multimap(std::initializer_list<value_type> _ilist, const allocator_type& _allocator)
 			: multimap(_ilist, key_compare(), _allocator) {}
+
+		this_type& operator=(const this_type& _rhs) { static_cast<base_type&>(*this) = _rhs; return *this; }
+		this_type& operator=(this_type&& _rhs) { static_cast<base_type&>(*this) = cckit::forward<this_type>(_rhs); return *this; }
+		this_type& operator=(std::initializer_list<value_type> _ilist) { static_cast<base_type&>(*this) = _ilist; return *this; }
 	};
 }
 

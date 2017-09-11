@@ -39,6 +39,23 @@ struct foo
 	foo(int _v0, const std::string& _v1)
 		: mV0(_v0), mV1(_v1)
 	{}
+
+	/*foo(const foo& _other)
+		: mV0(_other.mV0)
+		, mV1(_other.mV1)
+	{}
+
+	foo(foo&& _other)
+		: mV0(_other.mV0)
+		, mV1(cckit::move(_other.mV1))
+	{}
+
+	foo& operator=(const foo& _rhs)
+	{
+		foo temp = _rhs;
+		cckit::swap(*this, temp);
+		return *this;
+	}*/
 };
 
 inline std::ostream& operator<<(std::ostream& _os, const foo& _a) noexcept
@@ -236,26 +253,29 @@ void test_vector()
 	vectortype0 vector0{ foo(5, "5th"), foo(4, "4th"), foo(15, "15th") };
 	vectortype0 vector1 = vector0, vector2(cckit::move(vector1));
 
-	vector0.reserve(4);
-	vector2.reserve(16);
+	//vector0.reserve(4);
+	//vector0.reserve(8);
+	//vector2.reserve(16);
 
-	vector0.insert(vector0.cend(), foo(10, "10th"));
-	vector0.emplace_back(11, "11th");
-	vector0.push_back(foo(12, "12th"));
-	vector0.pop_back();
 	vector0.insert(vector0.cbegin(), { foo(1, "1th"), foo(2, "2th"), foo(3, "3th"), foo(4, "4th") });
 	vector0.insert(vector0.cbegin(), { foo(-2, "-2th"), foo(-1, "-1th"), foo(0, "0th") });
+	vector0.insert(vector0.end(), 4, foo(50, "50"));
+	vector0.emplace_back(51, "51th");
+	vector0.pop_back(); vector0.pop_back();
+	vector0.resize(25);
+	vector0.resize(20);
 
 	vector1.swap(vector0);
 	vector1.shrink_to_fit();
-	vector1.pop_back();
-
-	vector0.insert(vector0.cbegin(), { foo(1, "1th"), foo(2, "2th"), foo(3, "3th"), foo(4, "4th") });
-	vector0.clear();
-	vector0.insert(vector0.cbegin(), { foo(1, "1th"), foo(2, "2th"), foo(3, "3th") });
-	vector0.resize(5);
-	vector0.resize(4);
-	vector0.resize(8);
+	vector1.push_back(foo(100, "100"));
+	vector0 = vector1;
+	vector0 = cckit::move(vector1);
+	vector1 = cckit::move(vector2);
+	vector2 = { foo(), foo() };
+	auto iter0 = vector0.erase(vector0.find(2), vector0.find(7));
+	for (auto end = vector0.end(); iter0 != end; ++iter0)
+		cout << *iter0 << ", ";
+	cout << endl << endl;
 
 	cout << "vector0" << endl;
 	for (auto elem : vector0)
@@ -334,8 +354,8 @@ void test_setmap()
 
 	cout << endl;
 	cout << "MAP" << endl;
-	//cckit::map<int, std::string> tree1;
-	cckit::multimap<int, std::string> tree1;
+	cckit::map<int, std::string> tree1;
+	//cckit::multimap<int, std::string> tree1;
 	typedef decltype(tree1) treetype1;
 
 	tree1.insert(cckit::make_pair(4, "4th"));
@@ -351,7 +371,7 @@ void test_setmap()
 	tree1.insert(tree1.begin(), cckit::make_pair(20, "20th"));
 	tree1.insert({ cckit::make_pair(13, "13th"), cckit::make_pair(23, "23rd"), cckit::make_pair(33, "33rd") });
 
-	cckit::list<cckit::pair<const int, std::string> > list0 = { cckit::make_pair(17, "17th"), cckit::make_pair(27, "27th") };
+	cckit::vector<cckit::pair<const int, std::string> > list0 = { cckit::make_pair(17, "17th"), cckit::make_pair(27, "27th") };
 	//cckit::pair<const int, std::string> array0[] = { cckit::make_pair(17, "17th"), cckit::make_pair(27, "27th") };
 	tree1.insert(list0.begin(), list0.end());
 	
@@ -360,10 +380,27 @@ void test_setmap()
 	cout << "erase(1) = " << tree1.erase(1) << endl;
 	
 	tree1.erase(tree1.find(3), tree1.find(20));
+	tree1.try_emplace(10, "10th");
+	tree1.try_emplace(11, "11th");
+	tree1.insert_or_assign(10, "15th");
+	tree1.insert_or_assign(12, "15th");
+	tree1[10] = "10";
+	tree1[13] = "13";
+	try {
+		tree1.at(10) = "11";
+		tree1.at(14) = "11";
+	}
+	catch (const std::out_of_range& _exception) {
+		cout << _exception.what() << endl;
+	}
 	
 	cout << "size = " << tree1.size() << endl;
+
+	for (auto current = tree1.begin(), end = tree1.end(); current != end; current++)
+		cout << current->first << endl;
+	cout << endl;
 	
-	tree1.preorder_walk([](treetype1::iterator _current) {
+	tree1.preorder_walk([](treetype1::const_iterator _current) {
 		cout << "(" << _current->first << ", " << _current->second << ")" << endl;
 	}, tree1.root());
 	cout << endl;
@@ -412,14 +449,19 @@ public:
 
 	void func() const { cout << "const" << endl; }
 	void func() { cout << "non-const" << endl; const_cast<const B*>(this)->func(); }
+
+	void func0() const { cout << "const" << endl; (const_cast<B*>(this))->func0(); }
+	void func0() { cout << "non-const" << endl; }
 };
+
+
 
 int main()
 {	
 	
 	int temp;
 	
-	cckit::multiset<int> tree0;
+	/*cckit::multiset<int> tree0;
 	//cckit::set<int> tree0;
 
 	tree0.insert(4);
@@ -434,9 +476,15 @@ int main()
 	tree0.emplace(5);
 	
 	decltype(tree0) tree1 = { 3, 6, 3, 1, 9, 3, 3, 15 };
-	decltype(tree0) tree2 = cckit::move(tree1);
+	decltype(tree0) tree2 = tree1;
 	tree2.swap(tree0);
-	//auto rangePair = tree0.equal_range(3);
+	tree1 = cckit::move(tree0);
+	tree0 = { 4, 1, 99, 23, 1 };
+	auto rangePair = tree0.equal_range(1);
+
+	for (auto current = rangePair.first, end = rangePair.second; current != end; current++)
+		cout << *current << endl;
+	cout << endl;
 
 	cout << "tree0" << endl;
 	cout << "size = " << tree0.size() << endl;
@@ -472,9 +520,9 @@ int main()
 	cout << endl;
 	for (auto current = tree2.rbegin(); current != tree2.rend(); ++current)
 		cout << *current << endl;
-	cout << endl;
-	
-	//test_setmap();
+	cout << endl;*/
+
+	test_setmap();
 	//test_vector();
 	//test_graph();
 	//test_algorithm();

@@ -56,6 +56,10 @@ namespace cckit
 			: base_type(_ilist, _compare, _allocator) {}
 		set(std::initializer_list<value_type> _ilist, const allocator_type& _allocator)
 			: set(_ilist, key_compare(), _allocator) {}
+
+		this_type& operator=(const this_type& _rhs) { static_cast<base_type&>(*this) = _rhs; return *this; }
+		this_type& operator=(this_type&& _rhs) { static_cast<base_type&>(*this) = cckit::forward<this_type>(_rhs); return *this; }
+		this_type& operator=(std::initializer_list<value_type> _ilist) { static_cast<base_type&>(*this) = _ilist; return *this; }
 	};
 
 	template<typename Key, typename Compare = less<Key>, typename Allocator = allocator
@@ -108,6 +112,10 @@ namespace cckit
 			: base_type(_ilist, _compare, _allocator) {}
 		multiset(std::initializer_list<value_type> _ilist, const allocator_type& _allocator)
 			: multiset(_ilist, key_compare(), _allocator) {}
+
+		this_type& operator=(const this_type& _rhs) { static_cast<base_type&>(*this) = _rhs; return *this; }
+		this_type& operator=(this_type&& _rhs) { static_cast<base_type&>(*this) = cckit::forward<this_type>(_rhs); return *this; }
+		this_type& operator=(std::initializer_list<value_type> _ilist) { static_cast<base_type&>(*this) = _ilist; return *this; }
 	};
 }
 

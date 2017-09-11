@@ -5,6 +5,7 @@
 #include "type_traits.h"
 #include "utility.h"
 #include "functional.h"
+#include "memory.h"
 #include <iostream>
 namespace cckit
 {
