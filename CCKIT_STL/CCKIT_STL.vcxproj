@@ -25,14 +25,17 @@
     <ClInclude Include="CCKIT\experimental\graph.h" />
     <ClInclude Include="CCKIT\experimental\maze_gen.h" />
     <ClInclude Include="CCKIT\functional.h" />
+    <ClInclude Include="CCKIT\heap.h" />
     <ClInclude Include="CCKIT\internal\afx_config.h" />
     <ClInclude Include="CCKIT\internal\avltree.h" />
+    <ClInclude Include="CCKIT\internal\binary_heap.h" />
     <ClInclude Include="CCKIT\internal\config.h" />
     <ClInclude Include="CCKIT\internal\functional_base.h" />
     <ClInclude Include="CCKIT\iterator.h" />
     <ClInclude Include="CCKIT\list.h" />
     <ClInclude Include="CCKIT\map.h" />
     <ClInclude Include="CCKIT\memory.h" />
+    <ClInclude Include="CCKIT\priority_queue.h" />
     <ClInclude Include="CCKIT\queue.h" />
     <ClInclude Include="CCKIT\random.h" />
     <ClInclude Include="CCKIT\set.h" />

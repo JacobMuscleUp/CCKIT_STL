@@ -10,6 +10,7 @@
 #include "CCKIT/queue.h"
 #include "CCKIT/set.h"
 #include "CCKIT/map.h"
+#include "CCKIT/priority_queue.h"
 #include "CCKIT/algorithm.h"
 #include "CCKIT/experimental/graph.h"
 #include "CCKIT/experimental/csv_map.h"
@@ -18,6 +19,7 @@
 #include <string>
 #include <functional>
 #include <stack>
+#include <queue>
 
 #include <algorithm>
 #include <vector>
@@ -454,12 +456,48 @@ public:
 	void func0() { cout << "non-const" << endl; }
 };
 
+//#define NSP ::std::
+#define NSP ::cckit::
 
+std::ostream& operator<<(std::ostream& _os, const NSP pair<int, int>& _arg) 
+{
+	return _os << "(" << _arg.first << ", " << _arg.second << ")";
+}
 
 int main()
 {	
-	
 	int temp;
+	
+	NSP vector<NSP pair<int, int>> vector0
+		= { NSP	make_pair(3, 3), NSP make_pair(1, 1), NSP make_pair(13, 13)
+		, NSP make_pair(9, 9), NSP make_pair(6, 6), NSP make_pair(12, 12) };
+	NSP	priority_queue<NSP pair<int, int> > heap1;
+	//cckit::binary_heap<cckit::pair<int, int> > heap1;
+	decltype(heap1) heap0(decltype(heap1)::value_compare(), vector0);
+	heap0.push(NSP make_pair(3, 3));
+	heap0.emplace(1, 1);
+
+	decltype(heap0) heap2 = cckit::move(heap0);
+	heap0.swap(heap2);
+	cckit::swap(heap0, heap2);
+	//heap2.modify(2, 13, 14);	
+
+	cout << "heap0" << endl;
+	for (; !heap0.empty(); cout << heap0.top() << " ", heap0.pop()) {}
+	cout << endl;
+	cout << "heap2" << endl;
+	for (; !heap2.empty(); cout << heap2.top() << " ", heap2.pop()) {}
+	cout << endl;
+
+	/*cout << "heap0" << endl;
+	for (decltype(heap0)::size_type i = 0; i < heap0.size(); ++i)
+		cout << heap0[i] << " ";
+	cout << endl << "is_heap = " << heap0.validate() << endl;
+	cout << "heap2" << endl;
+	for (decltype(heap2)::size_type i = 0; i < heap2.size(); ++i)
+		cout << heap2[i] << " ";
+	cout << endl << "is_heap = " << heap2.validate() << endl;*/
+	
 	
 	/*cckit::multiset<int> tree0;
 	//cckit::set<int> tree0;
@@ -521,8 +559,8 @@ int main()
 	for (auto current = tree2.rbegin(); current != tree2.rend(); ++current)
 		cout << *current << endl;
 	cout << endl;*/
-
-	test_setmap();
+	
+	//test_setmap();
 	//test_vector();
 	//test_graph();
 	//test_algorithm();

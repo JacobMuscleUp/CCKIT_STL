@@ -93,6 +93,15 @@
     <ClInclude Include="CCKIT\map.h">
       <Filter>Header Files\CCKIT</Filter>
     </ClInclude>
+    <ClInclude Include="CCKIT\heap.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\internal\binary_heap.h">
+      <Filter>Header Files\CCKIT\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\priority_queue.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

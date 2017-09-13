@@ -6,7 +6,8 @@
 #include "utility.h"
 #include "functional.h"
 #include "memory.h"
-#include <iostream>
+#include "heap.h"
+
 namespace cckit
 {
 	// NON-MODIFYING SEQUENCE OPERATION

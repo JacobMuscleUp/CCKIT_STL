@@ -63,6 +63,37 @@ namespace cckit
 	}
 
 	template<typename T1, typename T2>
+	inline CCKIT_CONSTEXPR bool operator==(const pair<T1, T2>& _lhs, const pair<T1, T2>& _rhs)
+	{
+		return _lhs.first == _rhs.first && _lhs.second == _rhs.second;
+	}
+	template<typename T1, typename T2>
+	inline CCKIT_CONSTEXPR bool operator!=(const pair<T1, T2>& _lhs, const pair<T1, T2>& _rhs)
+	{
+		return !(_lhs == _rhs);
+	}
+	template<typename T1, typename T2>
+	inline CCKIT_CONSTEXPR bool operator<(const pair<T1, T2>& _lhs, const pair<T1, T2>& _rhs)
+	{
+		return _lhs.first < _rhs.first || (!(_rhs.first < _lhs.first) && _lhs.second < _rhs.second);
+	}
+	template<typename T1, typename T2>
+	inline CCKIT_CONSTEXPR bool operator>(const pair<T1, T2>& _lhs, const pair<T1, T2>& _rhs)
+	{
+		return _rhs.first < _lhs.first || (!(_lhs.first < _rhs.first) && _rhs.second < _lhs.second);
+	}
+	template<typename T1, typename T2>
+	inline CCKIT_CONSTEXPR bool operator<=(const pair<T1, T2>& _lhs, const pair<T1, T2>& _rhs)
+	{
+		return !(_lhs > _rhs);
+	}
+	template<typename T1, typename T2>
+	inline CCKIT_CONSTEXPR bool operator>=(const pair<T1, T2>& _lhs, const pair<T1, T2>& _rhs)
+	{
+		return !(_lhs < _rhs);
+	}
+
+	template<typename T1, typename T2>
 	template<typename U1, typename U2, typename>
 	CCKIT_CONSTEXPR pair<T1,T2>::pair()
 		: first(first_type()), second(second_type())
