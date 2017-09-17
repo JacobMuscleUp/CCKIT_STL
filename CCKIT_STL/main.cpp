@@ -445,7 +445,7 @@ class B
 {
 public:
 	A mA;
-
+	
 	//B() { cout << "B ctor" << endl; }
 	explicit B(A _a = A()) : mA(_a) { cout << "B ctor" << endl; }
 
@@ -454,6 +454,12 @@ public:
 
 	void func0() const { cout << "const" << endl; (const_cast<B*>(this))->func0(); }
 	void func0() { cout << "non-const" << endl; }
+
+	void func1(int&&) { cout << "move" << endl; }
+	void func1(const int&) { cout << "copy" << endl; }
+
+	template<class T>
+	void func2(T&& _arg) { func1(cckit::forward<T>(_arg)); }
 };
 
 //#define NSP ::std::
@@ -464,11 +470,50 @@ std::ostream& operator<<(std::ostream& _os, const NSP pair<int, int>& _arg)
 	return _os << "(" << _arg.first << ", " << _arg.second << ")";
 }
 
+#include "CCKIT/internal/blockmap.h"
+
 int main()
 {	
 	int temp;
 	
-	NSP vector<NSP pair<int, int>> vector0
+	{
+		cckit::blockmap<int> map0;
+		cckit::vector<int> vector0 = { 55, 56, 57, 58, 59, 60, 61, 62 };
+		/*for (int i = 0; i < 36; ++i)
+			map0.insert(map0.end(), i + 1);
+		for (int i = 0; i < 21; ++i)
+			map0.insert(map0.begin(), -i);
+		for (int i = 0; i < 20; ++i)
+			map0.insert(map0.end(), 88);*/
+		for (int i = 0; i < 9; ++i)
+			map0.insert(map0.end(), i << 1);
+		map0.insert(map0.begin() + 2, 3);
+		/*for (int i = 0; i < 10; ++i)
+			map0.insert(map0.end(), 65);*/
+		map0.insert(map0.end() - 1, vector0.cbegin(), vector0.cend());
+		//auto insertPos = map0.insert(map0.end() - 1, { 55, 56, 57, 58 });
+		//auto insertPos = map0.insert(map0.begin(), 8, 65);
+		map0.shrink_to_fit();
+		map0.insert(map0.cbegin() + 1, { 55, 56, 57, 58, 59 });
+
+		for (int i = 0; i < map0.mMapSize; ++i)
+			cout << (map0.mpBlockMap[i] ? "+" : "-") << " ";
+		cout << endl;
+		for (auto iter = map0.cbegin(); iter != map0.cend(); iter = 1 + iter)
+			cout << *iter << endl;
+		cout << endl;
+		struct Impl { static void output(cckit::add_lvalue_reference<cckit::add_const<decltype(map0)>::type>::type _map) {
+			for (int i = 0, size = _map.size(); i < size; ++i)
+				cout << _map[i] << endl;
+		} };
+		Impl::output(map0);
+		cout << endl;
+		for (auto iter = map0.rbegin(); iter != map0.rend(); iter = 1 + iter)
+			cout << *iter << endl;
+		cout << endl;
+	}
+	
+	/*NSP vector<NSP pair<int, int>> vector0
 		= { NSP	make_pair(3, 3), NSP make_pair(1, 1), NSP make_pair(13, 13)
 		, NSP make_pair(9, 9), NSP make_pair(6, 6), NSP make_pair(12, 12) };
 	NSP	priority_queue<NSP pair<int, int> > heap1;
@@ -487,7 +532,7 @@ int main()
 	cout << endl;
 	cout << "heap2" << endl;
 	for (; !heap2.empty(); cout << heap2.top() << " ", heap2.pop()) {}
-	cout << endl;
+	cout << endl;*/
 
 	/*cout << "heap0" << endl;
 	for (decltype(heap0)::size_type i = 0; i < heap0.size(); ++i)
@@ -497,68 +542,6 @@ int main()
 	for (decltype(heap2)::size_type i = 0; i < heap2.size(); ++i)
 		cout << heap2[i] << " ";
 	cout << endl << "is_heap = " << heap2.validate() << endl;*/
-	
-	
-	/*cckit::multiset<int> tree0;
-	//cckit::set<int> tree0;
-
-	tree0.insert(4);
-	tree0.insert(1);
-	tree0.insert(1);
-	tree0.insert(7);
-	tree0.insert(2);
-	tree0.insert(2);
-	tree0.insert(2);
-	tree0.insert(3);
-
-	tree0.emplace(5);
-	
-	decltype(tree0) tree1 = { 3, 6, 3, 1, 9, 3, 3, 15 };
-	decltype(tree0) tree2 = tree1;
-	tree2.swap(tree0);
-	tree1 = cckit::move(tree0);
-	tree0 = { 4, 1, 99, 23, 1 };
-	auto rangePair = tree0.equal_range(1);
-
-	for (auto current = rangePair.first, end = rangePair.second; current != end; current++)
-		cout << *current << endl;
-	cout << endl;
-
-	cout << "tree0" << endl;
-	cout << "size = " << tree0.size() << endl;
-	for (auto current = tree0.begin(), end = tree0.end(); current != end; current++)
-		cout << *current << endl;
-	cout << endl;
-	for (auto current = tree0.begin(), end = tree0.end(); current != end; current++)
-		cout << current.mpNode->mHeight << endl;
-	cout << endl;
-	for (auto current = tree0.rbegin(); current != tree0.rend(); ++current)
-		cout << *current << endl;
-	cout << endl;
-
-	cout << "tree1" << endl;
-	cout << "size = " << tree1.size() << endl;
-	for (auto current = tree1.begin(), end = tree1.end(); current != end; current++)
-		cout << *current << endl;
-	cout << endl;
-	for (auto current = tree1.begin(), end = tree1.end(); current != end; current++)
-		cout << current.mpNode->mHeight << endl;
-	cout << endl;
-	for (auto current = tree1.rbegin(); current != tree1.rend(); ++current)
-		cout << *current << endl;
-	cout << endl;
-
-	cout << "tree2" << endl;
-	cout << "size = " << tree2.size() << endl;
-	for (auto current = tree2.begin(), end = tree2.end(); current != end; current++)
-		cout << *current << endl;
-	cout << endl;
-	for (auto current = tree2.begin(), end = tree2.end(); current != end; current++)
-		cout << current.mpNode->mHeight << endl;
-	cout << endl;
-	for (auto current = tree2.rbegin(); current != tree2.rend(); ++current)
-		cout << *current << endl;
-	cout << endl;*/
 	
 	//test_setmap();
 	//test_vector();

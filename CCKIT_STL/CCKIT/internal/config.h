@@ -17,4 +17,7 @@
 #define CCKIT_ALLOCATOR_DEFAULT_NAME "CCKIT_ALLOCATOR"
 #define CCKIT_DEFAULT_ALLOCATOR_TYPE cckit::allocator
 
+typedef size_t cckit_size_t;
+typedef ptrdiff_t cckit_ptrdiff_t;
+
 #endif // !CCKIT_CONFIG_H

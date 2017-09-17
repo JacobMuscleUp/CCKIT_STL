@@ -240,6 +240,34 @@ namespace cckit
 		}
 		return _eraseFirst;
 	}
+
+	//
+	template<typename RandomAccessIterator>
+	RandomAccessIterator initialized_insert_after_n(RandomAccessIterator _first, RandomAccessIterator _last
+		, typename cckit::iterator_traits<RandomAccessIterator>::value_type&& _val)
+	{
+		typedef typename cckit::iterator_traits<RandomAccessIterator>::value_type value_type;
+		decltype(_first) current = _first;
+		try {
+			for (; current != _last; ++current) {
+				::new(static_cast<void*>(&*(current - 1))) value_type(cckit::move(*current));
+				cckit::destroy_at(&*current);
+			}
+			::new(static_cast<void*>(&*(current - 1))) value_type(cckit::move(_val));
+		}
+		catch (...) {
+			cckit::destroy(_first, _last);
+			throw;
+		}
+		return current;
+	}
+	template<typename RandomAccessIterator>
+	RandomAccessIterator initialized_insert_after_n(RandomAccessIterator _first, RandomAccessIterator _last
+		, const typename cckit::iterator_traits<RandomAccessIterator>::value_type& _val)
+	{
+		remove_const_t<remove_reference_t<decltype(_val)> > temp = _val;
+		return cckit::initialized_insert_after_n(_first, _last, cckit::move(temp));
+	}
 }
 
 #endif // !CCKIT_MEMORY_H

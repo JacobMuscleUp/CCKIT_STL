@@ -217,7 +217,7 @@ namespace cckit
 		reverse_iterator<Iterator>::operator+(difference_type _offset) const
 	{
 		this_type temp = *this;
-		*this += _offset;
+		temp += _offset;
 		return temp;
 	}
 	template<typename Iterator>
@@ -225,7 +225,7 @@ namespace cckit
 		reverse_iterator<Iterator>::operator-(difference_type _offset) const
 	{
 		this_type temp = *this;
-		*this -= _offset;
+		temp -= _offset;
 		return temp;
 	}
 	template<typename Iterator>
@@ -255,11 +255,23 @@ namespace cckit
 	{
 		return _lhs.mBase != _rhs.mBase;
 	}
+	template<typename Iterator>
+	reverse_iterator<Iterator> operator+(const reverse_iterator<Iterator>& _iter, cckit_ptrdiff_t _offset)
+	{
+		reverse_iterator<Iterator> temp = _iter;
+		return temp += _offset;
+	}
 	template< class Iterator0, class Iterator1 >
 	auto operator-(const reverse_iterator<Iterator0>& _lhs, const reverse_iterator<Iterator1>& _rhs)
 		-> decltype(_rhs.base() - _lhs.base())
 	{
 		return _rhs.base() - _lhs.base();
+	}
+
+	template<typename Iterator>
+	reverse_iterator<Iterator> operator+(cckit_ptrdiff_t _offset, const reverse_iterator<Iterator>& _iter)
+	{
+		return _iter + _offset;
 	}
 #pragma endregion reverse_iterator
 	

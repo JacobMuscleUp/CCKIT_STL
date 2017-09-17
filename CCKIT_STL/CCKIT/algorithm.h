@@ -253,11 +253,12 @@ namespace cckit
 	OutputIterator copy(InputIterator _first, InputIterator _last, OutputIterator _dFirst)
 	{
 		if (cckit::is_trivially_copyable<cckit::remove_reference_t<decltype(*_first)> >::value
-			&& cckit::is_same<random_access_iterator_tag, typename iterator_traits<InputIterator>::iterator_category>::value)
-			memcpy(&(*_dFirst), &(*_first), (_last - _first) * sizeof(decltype(*_first)));
+			&& cckit::is_same<random_access_iterator_tag, typename iterator_traits<InputIterator>::iterator_category>::value) {
+			memcpy(&*_dFirst, &*_first, (_last - _first) * sizeof(decltype(*_first)));
+			_dFirst += _last - _first;
+		}
 		else
-			for (; _first != _last; ++_first, ++_dFirst)
-				*_dFirst = *_first;
+			for (; _first != _last; *_dFirst = *_first, ++_first, ++_dFirst) {}
 		return _dFirst;
 	}
 	template<typename InputIterator, typename OutputIterator, typename UnaryPredicate>

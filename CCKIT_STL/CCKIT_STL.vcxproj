@@ -29,6 +29,7 @@
     <ClInclude Include="CCKIT\internal\afx_config.h" />
     <ClInclude Include="CCKIT\internal\avltree.h" />
     <ClInclude Include="CCKIT\internal\binary_heap.h" />
+    <ClInclude Include="CCKIT\internal\blockmap.h" />
     <ClInclude Include="CCKIT\internal\config.h" />
     <ClInclude Include="CCKIT\internal\functional_base.h" />
     <ClInclude Include="CCKIT\iterator.h" />
