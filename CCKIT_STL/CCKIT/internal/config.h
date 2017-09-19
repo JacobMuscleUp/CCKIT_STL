@@ -9,6 +9,8 @@
 #include <afxwin.h> // MFC core and standard components
 #include <afxext.h> // MFC extensions
 
+#include <cassert>
+
 #define CCKIT_CONSTEXPR constexpr
 #define CCKIT_NOEXCEPT noexcept
 #define CCKIT_DEBUG 1
@@ -16,6 +18,7 @@
 
 #define CCKIT_ALLOCATOR_DEFAULT_NAME "CCKIT_ALLOCATOR"
 #define CCKIT_DEFAULT_ALLOCATOR_TYPE cckit::allocator
+#define CCKIT_ASSERT(expr) assert((expr))
 
 typedef size_t cckit_size_t;
 typedef ptrdiff_t cckit_ptrdiff_t;

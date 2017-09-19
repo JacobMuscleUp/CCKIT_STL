@@ -599,14 +599,13 @@ namespace cckit
 		vector<T, Allocator>::erase(const_iterator _first, const_iterator _last)
 	{
 		difference_type offset = _first - begin(), count = _last - _first;
-		size_type newSize = mSize - count;
 
 		if (count > 0 && mSize > 0) {
-			if (3 * newSize <= mCap)
-				Reserve(2 * newSize);
-			iterator temp = cckit::initialized_erase(mArray + offset, count, mArray + mSize);
-			mSize = newSize;
-			return temp;
+			if (3 * mSize <= mCap)
+				Reserve(2 * mSize);
+			cckit::initialized_erase_leftshift(mArray + offset, mArray + (offset + count), mArray + mSize);
+			mSize -= count;
+			return mArray + offset;
 		}
 		return end();
 	}
@@ -714,9 +713,13 @@ namespace cckit
 	{
 		value_type* tempArray = Allocate(_cap);
 		if (mArray) {
+			cout << "mSize = " << mSize << endl;
+			cout << "_cap = " << _cap << endl;
 			cckit::uninitialized_copy(mArray, mArray + (cckit::min)(mSize, _cap), tempArray);
 			cckit::destroy(mArray, mArray + mSize);
 			Deallocate(mArray);
+			mSize = (cckit::min)(mSize, _cap);
+			cout << "mSize = " << mSize << endl;
 		}
 		mArray = tempArray;
 		mCap = _cap;

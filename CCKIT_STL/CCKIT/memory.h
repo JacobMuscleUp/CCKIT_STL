@@ -175,7 +175,7 @@ namespace cckit
 		return cckit::initialized_insert_n(_first, _last, cckit::move(temp));
 	}
 	template<typename RandomAccessIterator>
-	RandomAccessIterator initialized_insert_n(RandomAccessIterator _first, RandomAccessIterator _last, std::size_t _count
+	RandomAccessIterator initialized_insert_n(RandomAccessIterator _first, RandomAccessIterator _last, cckit_size_t _count
 		, typename cckit::iterator_traits<RandomAccessIterator>::value_type&& _val)
 	{
 		assert((_count > 0));
@@ -196,7 +196,7 @@ namespace cckit
 		return current;
 	}
 	template<typename RandomAccessIterator>
-	RandomAccessIterator initialized_insert_n(RandomAccessIterator _first, RandomAccessIterator _last, std::size_t _count
+	RandomAccessIterator initialized_insert_n(RandomAccessIterator _first, RandomAccessIterator _last, cckit_size_t _count
 		, const typename cckit::iterator_traits<RandomAccessIterator>::value_type& _val)
 	{
 		remove_const_t<remove_reference_t<decltype(_val)> > temp = _val;
@@ -223,14 +223,15 @@ namespace cckit
 	}
 
 	template<typename RandomAccessIterator>
-	RandomAccessIterator initialized_erase(RandomAccessIterator _eraseFirst, std::size_t _count, RandomAccessIterator _last)
+	void initialized_erase_leftshift(RandomAccessIterator _eraseFirst, RandomAccessIterator _eraseLast, RandomAccessIterator _last)
 	{
 		typedef typename cckit::iterator_traits<RandomAccessIterator>::value_type value_type;
+		auto count = _eraseLast - _eraseFirst;
 		decltype(_eraseFirst) current = _eraseFirst;
 		try {
-			for (auto newLast = _last - _count; current != newLast; ++current) {
+			for (auto newLast = _last - count; current != newLast; ++current) {
 				cckit::destroy_at(&*current);
-				::new(static_cast<void*>(&*current)) value_type(cckit::move(*(current + _count)));
+				::new(static_cast<void*>(&*current)) value_type(cckit::move(*(current + count)));
 			}
 			for (; current != _last; cckit::destroy_at(&*current), ++current) {}
 		}
@@ -238,10 +239,8 @@ namespace cckit
 			cckit::destroy(_eraseFirst, _last);
 			throw;
 		}
-		return _eraseFirst;
 	}
 
-	//
 	template<typename RandomAccessIterator>
 	RandomAccessIterator initialized_insert_after_n(RandomAccessIterator _first, RandomAccessIterator _last
 		, typename cckit::iterator_traits<RandomAccessIterator>::value_type&& _val)
@@ -266,7 +265,45 @@ namespace cckit
 		, const typename cckit::iterator_traits<RandomAccessIterator>::value_type& _val)
 	{
 		remove_const_t<remove_reference_t<decltype(_val)> > temp = _val;
-		return cckit::initialized_insert_after_n(_first, _last, cckit::move(temp));
+		return cckit::initialized_insert_after_n_(_first, _last, cckit::move(temp));
+	}
+
+	template<typename RandomAccessIterator>
+	void initialized_erase_rightshift(RandomAccessIterator _eraseFirst, RandomAccessIterator _eraseLast, RandomAccessIterator _first)
+	{
+		typedef typename cckit::iterator_traits<RandomAccessIterator>::value_type value_type;
+		auto count = _eraseLast - _eraseFirst;
+		decltype(_eraseLast) current = _eraseLast;
+		try {
+			for (auto newFirst = _first + count; current != newFirst;) {
+				cckit::destroy_at(&*(--current));
+				::new(static_cast<void*>(&*current)) value_type(cckit::move(*(current - count)));
+			}
+			for (; current != _first; cckit::destroy_at(&*(--current))) {}
+		}
+		catch (...) {
+			cckit::destroy(_first, _eraseLast);
+			throw;
+		}
+	}
+
+	template<typename RandomAccessIterator, typename... Args>
+	RandomAccessIterator initialized_emplace_after(RandomAccessIterator _first, RandomAccessIterator _last, Args&&... _args)
+	{
+		typedef typename cckit::iterator_traits<RandomAccessIterator>::value_type value_type;
+		decltype(_first) current = _first;
+		try {
+			for (; current != _last; ++current) {
+				::new(static_cast<void*>(&*(current - 1))) value_type(cckit::move(*current));
+				cckit::destroy_at(&*current);
+			}
+			::new(static_cast<void*>(&*(current - 1))) value_type(cckit::forward<Args>(_args)...);
+		}
+		catch (...) {
+			cckit::destroy(_first, _last);
+			throw;
+		}
+		return current;
 	}
 }
 

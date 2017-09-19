@@ -476,30 +476,47 @@ int main()
 {	
 	int temp;
 	
+	
 	{
 		cckit::blockmap<int> map0;
 		cckit::vector<int> vector0 = { 55, 56, 57, 58, 59, 60, 61, 62 };
-		/*for (int i = 0; i < 36; ++i)
-			map0.insert(map0.end(), i + 1);
-		for (int i = 0; i < 21; ++i)
-			map0.insert(map0.begin(), -i);
-		for (int i = 0; i < 20; ++i)
-			map0.insert(map0.end(), 88);*/
 		for (int i = 0; i < 9; ++i)
 			map0.insert(map0.end(), i << 1);
 		map0.insert(map0.begin() + 2, 3);
-		/*for (int i = 0; i < 10; ++i)
-			map0.insert(map0.end(), 65);*/
 		map0.insert(map0.end() - 1, vector0.cbegin(), vector0.cend());
 		//auto insertPos = map0.insert(map0.end() - 1, { 55, 56, 57, 58 });
 		//auto insertPos = map0.insert(map0.begin(), 8, 65);
 		map0.shrink_to_fit();
 		map0.insert(map0.cbegin() + 1, { 55, 56, 57, 58, 59 });
 
+		map0.erase(map0.cbegin()); map0.erase(map0.cbegin()); map0.erase(map0.cbegin());
+		map0.erase(map0.cbegin()); map0.erase(map0.cbegin()); map0.erase(map0.cbegin());
+		map0.insert(map0.cbegin(), 1); 
+		map0.erase(map0.cend() - 1); map0.erase(map0.cend() - 1); map0.erase(map0.cend() - 4);
+		map0.erase(map0.cbegin() + 3);
+		map0.insert(map0.cend(), 62); map0.insert(map0.cend() - 7, 54);
+		map0.insert(map0.cbegin(), 0);
+		auto erasePos = map0.cbegin();
+		erasePos = map0.erase(map0.cbegin() + 3);
+		map0.emplace(map0.cend() - 4, 58);
+
+		erasePos = map0.erase(map0.cbegin() + 1, map0.cbegin() + 5);
+		cckit::blockmap<int> map1; map1.insert(map1.cbegin(), vector0.begin(), vector0.end());
+		map1.swap(map0);
+		
+		erasePos = map0.cbegin();
+		
+
+		//while (erasePos != map0.cend())
+		//erasePos = map0.erase(erasePos);
+		//erasePos = map0.erase(map0.cbegin());
+		/*for (int i = 0; i < 10; ++i)
+			map0.insert(map0.cend(), i);*/
+
 		for (int i = 0; i < map0.mMapSize; ++i)
 			cout << (map0.mpBlockMap[i] ? "+" : "-") << " ";
 		cout << endl;
-		for (auto iter = map0.cbegin(); iter != map0.cend(); iter = 1 + iter)
+		for (auto iter = erasePos; iter != map0.cend(); iter = 1 + iter)
 			cout << *iter << endl;
 		cout << endl;
 		struct Impl { static void output(cckit::add_lvalue_reference<cckit::add_const<decltype(map0)>::type>::type _map) {
