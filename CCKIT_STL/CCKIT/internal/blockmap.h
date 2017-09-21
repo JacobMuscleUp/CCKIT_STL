@@ -5,9 +5,11 @@
 #include "../algorithm.h"
 #include "../utility.h"
 #include "../iterator.h"
+#include <initializer_list>
 
 namespace cckit
 {
+#define DEFAULT_BLOCK_SIZE static_cast<cckit_size_t>(5)
 	template<typename T, typename Pointer, typename Reference, cckit_size_t BlockSize>
 	class BlockMapIterator;
 	template<typename T, typename Allocator, cckit_size_t BlockSize>
@@ -150,7 +152,7 @@ namespace cckit
 			+ (*_arg1.mpCurrentBlockPtr + BlockSize0 - _arg1.mpCurrent);
 	}
 
-	template<typename T, typename Allocator = CCKIT_DEFAULT_ALLOCATOR_TYPE, cckit_size_t BlockSize = 5>
+	template<typename T, typename Allocator = CCKIT_DEFAULT_ALLOCATOR_TYPE, cckit_size_t BlockSize = DEFAULT_BLOCK_SIZE>
 	class blockmap
 	{
 		typedef blockmap<T, Allocator, BlockSize> this_type;
@@ -171,8 +173,28 @@ namespace cckit
 	public:
 		blockmap() : blockmap(allocator_type()) {}
 		explicit blockmap(const allocator_type& _allocator);
+		blockmap(size_type _count, const value_type& _val, const allocator_type& _allocator = allocator_type());
+		blockmap(size_type _count, const allocator_type& _allocator = allocator_type());
+		template <typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value> >
+			blockmap(InputIterator _first, InputIterator _last, const allocator_type& _allocator = allocator_type());
+		blockmap(const this_type& _other);
+		blockmap(const this_type& _other, const allocator_type& _allocator);
+		blockmap(this_type&& _other);
+		blockmap(this_type&& _other, const allocator_type& _allocator);
+		blockmap(std::initializer_list<value_type> _ilist, const allocator_type& _allocator = allocator_type());
 
 		~blockmap();
+
+		this_type& operator=(const this_type& _rhs) { assign(_rhs.cbegin(), _rhs.cend()); return *this; }
+		this_type& operator=(this_type&& _rhs) { swap(_rhs); return *this; }
+		this_type& operator=(std::initializer_list<value_type> _ilist) { assign(_ilist); return *this; }
+
+		void assign(size_type _size, const value_type& _val);
+		template<typename InputIterator
+			, typename = typename enable_if_t<is_iterator<InputIterator>::value> >
+			void assign(InputIterator _first, InputIterator _last);
+		void assign(std::initializer_list<value_type> _ilist);
 		
 		reference at(size_type _pos);
 		const_reference at(size_type _pos) const { return (const_cast<this_type*>(this))->at(_pos); }
@@ -196,7 +218,7 @@ namespace cckit
 		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 		const_reverse_iterator crend() const { return const_reverse_iterator(begin()); }
 
-		bool empty() const { mBegin == mEnd; }
+		bool empty() const { return mBegin == mEnd; }
 		size_type size() const { return mEnd - mBegin; }
 		void shrink_to_fit();
 		void clear() { for (iterator erasePos = cbegin(); erasePos != cend(); erasePos = erase(erasePos)) {} }
@@ -231,6 +253,13 @@ namespace cckit
 
 		void swap(this_type& _other);
 
+		// ADDITIONAL OPERATION
+		template<typename UnaryFunction
+			, enable_if_t<is_same<decltype(cckit::declval<UnaryFunction>()(nullptr), char()), char>::value>* = 0>
+		void verify_block_distribution(UnaryFunction _func) {
+			for (size_type i = 0; i < mMapSize; _func(mpBlockMap[i++])) {}
+		}
+		//! ADDITIONAL OPERATION
 	private:
 		struct ShiftLeft {};
 		struct ShiftRight {};
@@ -249,7 +278,7 @@ namespace cckit
 		template<typename... Args>
 		iterator Emplace(const_iterator _pos, ShiftRight, Args&&... _args);
 
-	public:
+	private:
 		value_type** mpBlockMap;
 		size_type mMapSize;
 		iterator mBegin;
@@ -262,11 +291,93 @@ namespace cckit
 {
 	template<typename T, typename Allocator, cckit_size_t BlockSize>
 	inline blockmap<T, Allocator, BlockSize>::blockmap(const allocator_type& _allocator)
-		: mpBlockMap(nullptr), mMapSize(1), mBegin(), mEnd(), mAllocator(_allocator)
+		: mMapSize(1), mAllocator(_allocator)
 	{
-		mpBlockMap = AllocateBlockMap(1);
+		mpBlockMap = AllocateBlockMap(mMapSize);
 		mBegin = mEnd = iterator(*mpBlockMap = AllocateBlock(), mpBlockMap);
 	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	blockmap<T, Allocator, BlockSize>::blockmap(size_type _count, const value_type& _val, const allocator_type& _allocator)
+		: mAllocator(_allocator)
+	{
+		int count = static_cast<int>(_count);
+		CCKIT_ASSERT((count > 0));
+
+		size_type usedBlockCount = (_count - 1) / BlockSize + 1; 
+		mpBlockMap = AllocateBlockMap(mMapSize = 2 * usedBlockCount);
+		value_type** beginBlockPtr = mpBlockMap + usedBlockCount / 2;
+		for (size_type i = 0; i < usedBlockCount; beginBlockPtr[i++] = AllocateBlock()) {}
+
+		mBegin = iterator(*beginBlockPtr, beginBlockPtr);
+		mEnd = mBegin + _count;
+		cckit::uninitialized_fill(mBegin, mEnd, _val);
+	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	blockmap<T, Allocator, BlockSize>::blockmap(size_type _count, const allocator_type& _allocator)
+		: mAllocator(_allocator)
+	{
+		int count = static_cast<int>(_count);
+		CCKIT_ASSERT((count > 0));
+
+		size_type usedBlockCount = (_count - 1) / BlockSize + 1;
+		mpBlockMap = AllocateBlockMap(mMapSize = 2 * usedBlockCount);
+		value_type** beginBlockPtr = mpBlockMap + usedBlockCount / 2;
+		for (size_type i = 0; i < usedBlockCount; beginBlockPtr[i++] = AllocateBlock()) {}
+
+		mBegin = iterator(*beginBlockPtr, beginBlockPtr);
+		mEnd = mBegin + _count;
+		cckit::uninitialized_default_fill(mBegin, mEnd);
+	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	template <typename InputIterator, typename>
+	blockmap<T, Allocator, BlockSize>::blockmap(InputIterator _first, InputIterator _last, const allocator_type& _allocator)
+		: mAllocator(_allocator)
+	{
+		int count = _last - _first;
+		CCKIT_ASSERT((count > 0));
+
+		size_type usedBlockCount = (count - 1) / BlockSize + 1;
+		mpBlockMap = AllocateBlockMap(mMapSize = 2 * usedBlockCount);
+		value_type** beginBlockPtr = mpBlockMap + usedBlockCount / 2;
+		for (size_type i = 0; i < usedBlockCount; beginBlockPtr[i++] = AllocateBlock()) {}
+
+		mBegin = iterator(*beginBlockPtr, beginBlockPtr);
+		mEnd = mBegin + count;
+		cckit::uninitialized_copy(_first, _last, mBegin);
+	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	inline blockmap<T, Allocator, BlockSize>::blockmap(const this_type& _other)
+		: blockmap()
+	{
+		this_type temp;
+		temp = _other;
+		swap(temp);
+	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	inline blockmap<T, Allocator, BlockSize>::blockmap(const this_type& _other, const allocator_type& _allocator)
+		: blockmap(_allocator)
+	{
+		this_type temp;
+		temp = _other;
+		swap(temp);
+	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	inline blockmap<T, Allocator, BlockSize>::blockmap(this_type&& _other)
+		: blockmap(_other.mAllocator)
+	{
+		swap(_other);
+	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	inline blockmap<T, Allocator, BlockSize>::blockmap(this_type&& _other, const allocator_type& _allocator)
+		: blockmap(_other.mAllocator)
+	{
+		swap(_other);
+		mAllocator = _allocator;
+	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	inline blockmap<T, Allocator, BlockSize>::blockmap(std::initializer_list<value_type> _ilist, const allocator_type& _allocator)
+		: blockmap(_ilist.begin(), _ilist.end(), _allocator)
+	{}
 
 	template<typename T, typename Allocator, cckit_size_t BlockSize>
 	inline blockmap<T, Allocator, BlockSize>::~blockmap()
@@ -278,6 +389,40 @@ namespace cckit
 		for (auto pBlock = mBegin.mpCurrentBlockPtr; pBlock != mEnd.mpCurrentBlockPtr; ++pBlock)
 			DeallocateBlock(*pBlock);
 		DeallocateBlockMap(mpBlockMap);
+	}
+
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	void blockmap<T, Allocator, BlockSize>::assign(size_type _size, const value_type& _val)
+	{
+		size_type size = mEnd - mBegin;
+		if (_size < size) {
+			erase(cbegin() + _size, cend());
+			cckit::fill(cbegin(), cend(), _val);
+		}
+		else {
+			cckit::fill(cbegin(), cend(), _val);
+			insert(cend(), _size - size, _val);
+		}
+	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	template<typename InputIterator, typename>
+	void blockmap<T, Allocator, BlockSize>::assign(InputIterator _first, InputIterator _last)
+	{
+		size_type size = mEnd - mBegin, newSize = _last - _first;
+		if (newSize < size) {
+			erase(cbegin() + newSize, cend());
+			cckit::copy(_first, _last, cbegin());
+		}
+		else {
+			InputIterator mid = _first + size;
+			cckit::copy(_first, mid, cbegin());
+			insert(cend(), mid, _last);
+		}
+	}
+	template<typename T, typename Allocator, cckit_size_t BlockSize>
+	inline void blockmap<T, Allocator, BlockSize>::assign(std::initializer_list<value_type> _ilist)
+	{
+		assign(_ilist.begin(), _ilist.end());
 	}
 
 	template<typename T, typename Allocator, cckit_size_t BlockSize>

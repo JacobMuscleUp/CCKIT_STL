@@ -10,6 +10,7 @@
 #include "CCKIT/queue.h"
 #include "CCKIT/set.h"
 #include "CCKIT/map.h"
+#include "CCKIT/deque.h"
 #include "CCKIT/priority_queue.h"
 #include "CCKIT/algorithm.h"
 #include "CCKIT/experimental/graph.h"
@@ -419,17 +420,57 @@ void test_setmap()
 	}, tree1.root());
 }
 
-/*void* operator new[](std::size_t _bytes, const char*)
+void test_deque()
 {
-	cout << "bytes = " << _bytes << endl;
-	return ::operator new[](_bytes);
+	{
+		cckit::deque<int> map0;
+		cckit::vector<int> vector0 = { 55, 56, 57, 58, 59, 60, 61, 62 };
+		for (int i = 0; i < 9; ++i)
+			map0.insert(map0.end(), i << 1);
+		map0.insert(map0.begin() + 2, 3);
+		map0.insert(map0.end() - 1, vector0.cbegin(), vector0.cend());
+		//auto insertPos = map0.insert(map0.end() - 1, { 55, 56, 57, 58 });
+		//auto insertPos = map0.insert(map0.begin(), 8, 65);
+		map0.shrink_to_fit();
+		map0.insert(map0.cbegin() + 1, { 55, 56, 57, 58, 59 });
+
+		map0.erase(map0.cbegin()); map0.erase(map0.cbegin()); map0.erase(map0.cbegin());
+		map0.erase(map0.cbegin()); map0.erase(map0.cbegin()); map0.erase(map0.cbegin());
+		map0.insert(map0.cbegin(), 1);
+		map0.erase(map0.cend() - 1); map0.erase(map0.cend() - 1); map0.erase(map0.cend() - 4);
+		map0.erase(map0.cbegin() + 3);
+		map0.insert(map0.cend(), 62); map0.insert(map0.cend() - 7, 54);
+		map0.insert(map0.cbegin(), 0);
+		auto erasePos = map0.cbegin();
+		erasePos = map0.erase(map0.cbegin() + 3);
+		map0.emplace(map0.cend() - 4, 58);
+
+		erasePos = map0.erase(map0.cbegin() + 1, map0.cbegin() + 5);
+		decltype(map0) map1 = map0;
+
+		erasePos = map0.cbegin();
+
+		map1.verify_block_distribution([](bool _bFlag) {
+			cout << (_bFlag ? "+" : "-") << " ";
+		});
+		cout << endl;
+		for (auto iter = erasePos; iter != map0.cend(); iter = 1 + iter)
+			cout << *iter << endl;
+		cout << endl;
+		struct Impl {
+			static void output(cckit::add_lvalue_reference<cckit::add_const<decltype(map0)>::type>::type _map) {
+				for (int i = 0, size = _map.size(); i < size; ++i)
+					cout << _map[i] << endl;
+			}
+		};
+		Impl::output(map1);
+		cout << endl;
+		for (auto iter = map0.rbegin(); iter != map0.rend(); iter = 1 + iter)
+			cout << *iter << endl;
+		cout << endl;
+	}
 }
-struct Test
-{
-	int* mA;
-	Test(int a) { mA = new int(a); }
-	~Test() { delete mA; }
-};*/
+
 class A
 {
 public:
@@ -470,67 +511,13 @@ std::ostream& operator<<(std::ostream& _os, const NSP pair<int, int>& _arg)
 	return _os << "(" << _arg.first << ", " << _arg.second << ")";
 }
 
-#include "CCKIT/internal/blockmap.h"
-
 int main()
 {	
 	int temp;
 	
 	
-	{
-		cckit::blockmap<int> map0;
-		cckit::vector<int> vector0 = { 55, 56, 57, 58, 59, 60, 61, 62 };
-		for (int i = 0; i < 9; ++i)
-			map0.insert(map0.end(), i << 1);
-		map0.insert(map0.begin() + 2, 3);
-		map0.insert(map0.end() - 1, vector0.cbegin(), vector0.cend());
-		//auto insertPos = map0.insert(map0.end() - 1, { 55, 56, 57, 58 });
-		//auto insertPos = map0.insert(map0.begin(), 8, 65);
-		map0.shrink_to_fit();
-		map0.insert(map0.cbegin() + 1, { 55, 56, 57, 58, 59 });
-
-		map0.erase(map0.cbegin()); map0.erase(map0.cbegin()); map0.erase(map0.cbegin());
-		map0.erase(map0.cbegin()); map0.erase(map0.cbegin()); map0.erase(map0.cbegin());
-		map0.insert(map0.cbegin(), 1); 
-		map0.erase(map0.cend() - 1); map0.erase(map0.cend() - 1); map0.erase(map0.cend() - 4);
-		map0.erase(map0.cbegin() + 3);
-		map0.insert(map0.cend(), 62); map0.insert(map0.cend() - 7, 54);
-		map0.insert(map0.cbegin(), 0);
-		auto erasePos = map0.cbegin();
-		erasePos = map0.erase(map0.cbegin() + 3);
-		map0.emplace(map0.cend() - 4, 58);
-
-		erasePos = map0.erase(map0.cbegin() + 1, map0.cbegin() + 5);
-		cckit::blockmap<int> map1; map1.insert(map1.cbegin(), vector0.begin(), vector0.end());
-		map1.swap(map0);
-		
-		erasePos = map0.cbegin();
-		
-
-		//while (erasePos != map0.cend())
-		//erasePos = map0.erase(erasePos);
-		//erasePos = map0.erase(map0.cbegin());
-		/*for (int i = 0; i < 10; ++i)
-			map0.insert(map0.cend(), i);*/
-
-		for (int i = 0; i < map0.mMapSize; ++i)
-			cout << (map0.mpBlockMap[i] ? "+" : "-") << " ";
-		cout << endl;
-		for (auto iter = erasePos; iter != map0.cend(); iter = 1 + iter)
-			cout << *iter << endl;
-		cout << endl;
-		struct Impl { static void output(cckit::add_lvalue_reference<cckit::add_const<decltype(map0)>::type>::type _map) {
-			for (int i = 0, size = _map.size(); i < size; ++i)
-				cout << _map[i] << endl;
-		} };
-		Impl::output(map0);
-		cout << endl;
-		for (auto iter = map0.rbegin(); iter != map0.rend(); iter = 1 + iter)
-			cout << *iter << endl;
-		cout << endl;
-	}
 	
-	/*NSP vector<NSP pair<int, int>> vector0
+	NSP deque<NSP pair<int, int>> vector0
 		= { NSP	make_pair(3, 3), NSP make_pair(1, 1), NSP make_pair(13, 13)
 		, NSP make_pair(9, 9), NSP make_pair(6, 6), NSP make_pair(12, 12) };
 	NSP	priority_queue<NSP pair<int, int> > heap1;
@@ -549,7 +536,7 @@ int main()
 	cout << endl;
 	cout << "heap2" << endl;
 	for (; !heap2.empty(); cout << heap2.top() << " ", heap2.pop()) {}
-	cout << endl;*/
+	cout << endl;
 
 	/*cout << "heap0" << endl;
 	for (decltype(heap0)::size_type i = 0; i < heap0.size(); ++i)
@@ -560,6 +547,7 @@ int main()
 		cout << heap2[i] << " ";
 	cout << endl << "is_heap = " << heap2.validate() << endl;*/
 	
+	//test_deque();
 	//test_setmap();
 	//test_vector();
 	//test_graph();
@@ -568,6 +556,7 @@ int main()
 	//test_mazegen();
 	//test_stack();
 	//test_queue();
+
 	std::cin >> temp;
 	return 1;
 }

@@ -713,13 +713,10 @@ namespace cckit
 	{
 		value_type* tempArray = Allocate(_cap);
 		if (mArray) {
-			cout << "mSize = " << mSize << endl;
-			cout << "_cap = " << _cap << endl;
 			cckit::uninitialized_copy(mArray, mArray + (cckit::min)(mSize, _cap), tempArray);
 			cckit::destroy(mArray, mArray + mSize);
 			Deallocate(mArray);
 			mSize = (cckit::min)(mSize, _cap);
-			cout << "mSize = " << mSize << endl;
 		}
 		mArray = tempArray;
 		mCap = _cap;

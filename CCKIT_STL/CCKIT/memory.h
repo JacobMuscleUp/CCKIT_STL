@@ -113,6 +113,21 @@ namespace cckit
 		::new(static_cast<void*>(_pTarget)) T;
 	}
 
+	template<typename ForwardIterator>
+	void uninitialized_default_fill(ForwardIterator _first, ForwardIterator _last)
+	{
+		typedef typename cckit::iterator_traits<ForwardIterator>::value_type value_type;
+		decltype(_first) current = _first;
+		try {
+			for (; current != _last; ++current)
+				cckit::uninitialized_init(&*current);
+		}
+		catch (...) {
+			cckit::destroy(_first, current);
+			throw;
+		}
+	}
+
 	template<typename T, typename... Args>
 	inline void initialized_init(T* _pTarget, Args&&... _args)
 	{

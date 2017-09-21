@@ -1,8 +1,8 @@
 #ifndef CCKIT_BINARY_HEAP_H
 #define CCKIT_BINARY_HEAP_H
 
-#include "config.h"
 #include "../vector.h"
+#include "../deque.h"
 #include "../algorithm.h"
 
 namespace cckit

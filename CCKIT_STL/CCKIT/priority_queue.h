@@ -25,7 +25,7 @@ namespace cckit
 	"Compare"
 	A Compare type providing a strict weak ordering.
 	*/
-	template<typename T, typename Container = cckit::vector<T>, typename Compare = cckit::less<T>
+	template<typename T, typename Container = cckit::deque<T>, typename Compare = cckit::less<T>
 		, template<typename, typename, typename> class DataStructure = cckit::binary_heap>
 	class priority_queue : public DataStructure<T, Container, Compare>
 	{

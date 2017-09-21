@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="CCKIT\algorithm.h" />
     <ClInclude Include="CCKIT\allocator.h" />
+    <ClInclude Include="CCKIT\deque.h" />
     <ClInclude Include="CCKIT\experimental\csv_map.h" />
     <ClInclude Include="CCKIT\experimental\graph.h" />
     <ClInclude Include="CCKIT\experimental\maze_gen.h" />

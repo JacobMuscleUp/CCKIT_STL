@@ -105,6 +105,9 @@
     <ClInclude Include="CCKIT\internal\blockmap.h">
       <Filter>Header Files\CCKIT\internal</Filter>
     </ClInclude>
+    <ClInclude Include="CCKIT\deque.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
