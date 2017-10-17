@@ -514,18 +514,22 @@ std::ostream& operator<<(std::ostream& _os, const NSP pair<int, int>& _arg)
 int main()
 {	
 	int temp;
-	cckit::matrix<3, 3> m = 
+	cckit::matrix<3, 3> mat = 
 		{ { 1, 0, 2 }
 		, { 2, 1, 1 }
 		, { 0, 12, 1 } };
-	auto minor = m.minor(2, 2);
-	for (int i = 0; i < minor.ROW; ++i, cout << endl)
-		for (int j = 0; j < minor.COL; ++j)
-			cout << minor.at(i, j) << " ";
+
+	auto inverseMat = mat.inverse();
+	auto multMat = cckit::multiply(mat, inverseMat);
+	for (int i = 0; i < multMat.ROW; ++i, cout << endl)
+		for (int j = 0; j < multMat.COL; ++j) {
+			multMat.at(i, j) = ((cckit::abs(multMat.at(i, j)) < .001) ? 0 : multMat.at(i, j));
+			cout << multMat.at(i, j) << " ";
+		}
 	cout << endl;
-	cckit::matrix<1, 1> m0 = { {2} };
-	cout << cckit::determinant(m) << endl;
-	cout << cckit::determinant(m) << endl;
+	
+	cout << cckit::determinant(mat) << endl;
+	cout << cckit::determinant(mat) << endl;
 	
 	/*NSP deque<NSP pair<int, int>> vector0
 		= { NSP	make_pair(3, 3), NSP make_pair(1, 1), NSP make_pair(13, 13)
