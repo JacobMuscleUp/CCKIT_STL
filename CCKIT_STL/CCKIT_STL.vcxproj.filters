@@ -22,6 +22,9 @@
     <Filter Include="Header Files\CCKIT\experimental">
       <UniqueIdentifier>{6c52caf7-aaa2-41e7-a338-05021752d649}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\CCKIT\math">
+      <UniqueIdentifier>{906fdb95-3075-44e0-a975-721f94dba2b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCKIT\allocator.h">
@@ -107,6 +110,9 @@
     </ClInclude>
     <ClInclude Include="CCKIT\deque.h">
       <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\math\matrix.h">
+      <Filter>Header Files\CCKIT\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

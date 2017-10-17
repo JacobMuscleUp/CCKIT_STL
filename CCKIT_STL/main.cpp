@@ -510,14 +510,24 @@ std::ostream& operator<<(std::ostream& _os, const NSP pair<int, int>& _arg)
 {
 	return _os << "(" << _arg.first << ", " << _arg.second << ")";
 }
-
+#include "CCKIT/math/matrix.h"
 int main()
 {	
 	int temp;
+	cckit::matrix<3, 3> m = 
+		{ { 1, 0, 2 }
+		, { 2, 1, 1 }
+		, { 0, 12, 1 } };
+	auto minor = m.minor(2, 2);
+	for (int i = 0; i < minor.ROW; ++i, cout << endl)
+		for (int j = 0; j < minor.COL; ++j)
+			cout << minor.at(i, j) << " ";
+	cout << endl;
+	cckit::matrix<1, 1> m0 = { {2} };
+	cout << cckit::determinant(m) << endl;
+	cout << cckit::determinant(m) << endl;
 	
-	
-	
-	NSP deque<NSP pair<int, int>> vector0
+	/*NSP deque<NSP pair<int, int>> vector0
 		= { NSP	make_pair(3, 3), NSP make_pair(1, 1), NSP make_pair(13, 13)
 		, NSP make_pair(9, 9), NSP make_pair(6, 6), NSP make_pair(12, 12) };
 	NSP	priority_queue<NSP pair<int, int> > heap1;
@@ -536,7 +546,7 @@ int main()
 	cout << endl;
 	cout << "heap2" << endl;
 	for (; !heap2.empty(); cout << heap2.top() << " ", heap2.pop()) {}
-	cout << endl;
+	cout << endl;*/
 
 	/*cout << "heap0" << endl;
 	for (decltype(heap0)::size_type i = 0; i < heap0.size(); ++i)
