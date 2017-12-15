@@ -16,6 +16,8 @@
 #include "CCKIT/experimental/graph.h"
 #include "CCKIT/experimental/csv_map.h"
 #include "CCKIT/experimental/maze_gen.h"
+#include "CCKIT/math/matrix.h"
+#include "CCKIT/spatial partitioning/quadtree.h"
 #include <list>
 #include <string>
 #include <functional>
@@ -420,6 +422,26 @@ void test_setmap()
 	}, tree1.root());
 }
 
+void test_matrix()
+{
+	cckit::matrix<3, 3> mat =
+	{ { 1, 0, 2 }
+	, { 2, 1, 1 }
+	, { 0, 12, 1 } };
+
+	auto inverseMat = mat.inverse_gauss_jordan_elimination();
+	auto multMat = cckit::multiply(mat, inverseMat);
+	for (int i = 0; i < multMat.ROW; ++i, cout << endl)
+	for (int j = 0; j < multMat.COL; ++j) {
+	multMat[i][j] = ((cckit::abs(multMat[i][j]) < .001) ? 0 : multMat[i][j]);
+	cout << multMat[i][j] << " ";
+	}
+	cout << endl;
+
+	cout << cckit::determinant(mat) << endl;
+	cout << cckit::determinant(mat) << endl;
+}
+
 void test_deque()
 {
 	{
@@ -471,6 +493,40 @@ void test_deque()
 	}
 }
 
+void test_quadtree()
+{
+	cckit::quadtree<int> qt(cckit::quadtree<int>::rect(cckit::quadtree<int>::point(1.0f, 1.0f), cckit::quadtree<int>::point(5.0f, 7.0f)));
+	qt.insert(0, decltype(qt)::point(2.0f, 1.0f));
+	qt.insert(1, decltype(qt)::point(2.0f, 2.0f));
+	qt.insert(2, decltype(qt)::point(4.9f, 2.0f));
+	qt.insert(3, decltype(qt)::point(4.5f, 6.0f));
+	qt.insert(4, decltype(qt)::point(1.6f, 5.0f));
+
+	qt.insert(5, decltype(qt)::point(4.0f, 1.0f));
+	qt.insert(6, decltype(qt)::point(3.5f, 1.1f));
+	qt.insert(7, decltype(qt)::point(4.5f, 1.1f));
+
+	qt.insert(10, decltype(qt)::point(1.5f, 5.0f));
+	qt.insert(8, decltype(qt)::point(1.5f, 5.1f));
+	qt.insert(9, decltype(qt)::point(1.5f, 4.1f));
+
+	cout << qt.size() << endl;
+
+	decltype(qt)::elemlist_type list0;
+	qt.query_range(decltype(qt)::rect(decltype(qt)::point(1.0f, 1.0f), decltype(qt)::point(2.01f, 5.001f)), list0);
+	cout << list0.size() << endl;
+
+	/*qt.verify([](const decltype(qt)::value_type& _arg) {
+	cout << _arg << " ";
+	}, []() {
+	cout << "nil" << endl;
+	}, []() {
+	cout << "branch BEGIN" << endl;
+	}, []() {
+	cout << "branch END" << endl;
+	});*/
+}
+
 class A
 {
 public:
@@ -510,27 +566,13 @@ std::ostream& operator<<(std::ostream& _os, const NSP pair<int, int>& _arg)
 {
 	return _os << "(" << _arg.first << ", " << _arg.second << ")";
 }
-#include "CCKIT/math/matrix.h"
+#include "CCKIT/math/arithmetic.h"
 int main()
 {	
 	int temp;
-	cckit::matrix<3, 3> mat = 
-		{ { 1, 0, 2 }
-		, { 2, 1, 1 }
-		, { 0, 12, 1 } };
+	
+	cout << cckit::mult(cckit::add(15, 23), 25) << endl;
 
-	auto inverseMat = mat.inverse();
-	auto multMat = cckit::multiply(mat, inverseMat);
-	for (int i = 0; i < multMat.ROW; ++i, cout << endl)
-		for (int j = 0; j < multMat.COL; ++j) {
-			multMat.at(i, j) = ((cckit::abs(multMat.at(i, j)) < .001) ? 0 : multMat.at(i, j));
-			cout << multMat.at(i, j) << " ";
-		}
-	cout << endl;
-	
-	cout << cckit::determinant(mat) << endl;
-	cout << cckit::determinant(mat) << endl;
-	
 	/*NSP deque<NSP pair<int, int>> vector0
 		= { NSP	make_pair(3, 3), NSP make_pair(1, 1), NSP make_pair(13, 13)
 		, NSP make_pair(9, 9), NSP make_pair(6, 6), NSP make_pair(12, 12) };

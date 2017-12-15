@@ -25,6 +25,9 @@
     <Filter Include="Header Files\CCKIT\math">
       <UniqueIdentifier>{906fdb95-3075-44e0-a975-721f94dba2b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\CCKIT\spatial partitioning">
+      <UniqueIdentifier>{3fe50e9a-1cbd-4c98-ab4f-1db094a00aa9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCKIT\allocator.h">
@@ -112,6 +115,15 @@
       <Filter>Header Files\CCKIT</Filter>
     </ClInclude>
     <ClInclude Include="CCKIT\math\matrix.h">
+      <Filter>Header Files\CCKIT\math</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\spatial partitioning\quadtree.h">
+      <Filter>Header Files\CCKIT\spatial partitioning</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\math.h">
+      <Filter>Header Files\CCKIT</Filter>
+    </ClInclude>
+    <ClInclude Include="CCKIT\math\arithmetic.h">
       <Filter>Header Files\CCKIT\math</Filter>
     </ClInclude>
   </ItemGroup>

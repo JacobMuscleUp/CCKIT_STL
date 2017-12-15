@@ -4,6 +4,7 @@
 #include "../internal/config.h"
 #include <initializer_list>
 #include <cmath>
+//#include "../math.h"
 
 namespace cckit 
 {
@@ -36,6 +37,13 @@ namespace cckit
 		}
 		double& at(int _row, int _col) {
 			return mArray[_row][_col];
+		}
+
+		const double* operator[](int _row) const {
+			return mArray[_row];
+		}
+		double* operator[](int _row) {
+			return mArray[_row];
 		}
 
 		matrix<Col, Row> transpose() const {
@@ -156,10 +164,6 @@ namespace cckit
 	}
 	double determinant(const matrix<1, 1>& _mat) {
 		return _mat.at(0, 0);
-	}
-
-	double abs(double _arg) {
-		return (_arg < 0) ? -_arg : _arg;
 	}
 }
 

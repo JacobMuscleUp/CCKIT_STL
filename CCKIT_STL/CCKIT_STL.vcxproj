@@ -36,12 +36,15 @@
     <ClInclude Include="CCKIT\iterator.h" />
     <ClInclude Include="CCKIT\list.h" />
     <ClInclude Include="CCKIT\map.h" />
+    <ClInclude Include="CCKIT\math.h" />
+    <ClInclude Include="CCKIT\math\arithmetic.h" />
     <ClInclude Include="CCKIT\math\matrix.h" />
     <ClInclude Include="CCKIT\memory.h" />
     <ClInclude Include="CCKIT\priority_queue.h" />
     <ClInclude Include="CCKIT\queue.h" />
     <ClInclude Include="CCKIT\random.h" />
     <ClInclude Include="CCKIT\set.h" />
+    <ClInclude Include="CCKIT\spatial partitioning\quadtree.h" />
     <ClInclude Include="CCKIT\stack.h" />
     <ClInclude Include="CCKIT\static_assert.h" />
     <ClInclude Include="CCKIT\tuple.h" />
