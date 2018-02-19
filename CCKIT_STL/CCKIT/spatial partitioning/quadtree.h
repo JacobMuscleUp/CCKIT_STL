@@ -43,14 +43,18 @@ namespace cckit
 			rect(const rect& _other)
 				: rect(_other.mTopLeft, _other.mBottomRight) {}
 			bool contain(const point& _pt) const {
-				return !((_pt.mX < mTopLeft.mX) || (_pt.mX > mBottomRight.mX) || cckit::equal(_pt.mX, mBottomRight.mX)
-					|| (_pt.mY < mTopLeft.mY) || (_pt.mY > mBottomRight.mY) || cckit::equal(_pt.mY, mBottomRight.mY));
+				return !(
+					(_pt.mX < mTopLeft.mX) || (_pt.mX > mBottomRight.mX) || cckit::equal(_pt.mX, mBottomRight.mX)
+					|| (_pt.mY < mTopLeft.mY) || (_pt.mY > mBottomRight.mY) || cckit::equal(_pt.mY, mBottomRight.mY)
+				);
 			}
 			bool intersect(const rect& _other) const {
-				return !((mTopLeft.mX > _other.mBottomRight.mX) || (mBottomRight.mX < _other.mTopLeft.mX)
-						|| (mTopLeft.mY > _other.mBottomRight.mY) || (mBottomRight.mY < _other.mTopLeft.mY)
-						|| cckit::equal(mTopLeft.mX, _other.mBottomRight.mX) || cckit::equal(mBottomRight.mX, _other.mTopLeft.mX)
-						|| cckit::equal(mTopLeft.mY, _other.mBottomRight.mY) || cckit::equal(mBottomRight.mY, _other.mTopLeft.mY));
+				return !(
+					(mTopLeft.mX > _other.mBottomRight.mX) || (mBottomRight.mX < _other.mTopLeft.mX)
+					|| (mTopLeft.mY > _other.mBottomRight.mY) || (mBottomRight.mY < _other.mTopLeft.mY)
+					|| cckit::equal(mTopLeft.mX, _other.mBottomRight.mX) || cckit::equal(mBottomRight.mX, _other.mTopLeft.mX)
+					|| cckit::equal(mTopLeft.mY, _other.mBottomRight.mY) || cckit::equal(mBottomRight.mY, _other.mTopLeft.mY)
+				);
 			}
 		};
 
@@ -64,7 +68,7 @@ namespace cckit
 		~quadtree();
 
 		bool insert(const value_type& _val, const point& _pt);
-		void query_range(const rect& _range, elemlist_type& _list) const;
+		void query_range(const rect& _range, elemlist_type& _list) const;// precondition: _list is empty
 		size_type size() const;
 
 		template<typename UnaryFunction0, typename NullaryFunction0, typename NullaryFunction1, typename NullaryFunction2>
@@ -83,7 +87,7 @@ namespace cckit
 		}
 
 	private:
-		void Subdivide();
+		void Subdivide();// postcondition: mpElems = nullptr
 
 	private:
 		this_type* mpSubtrees[4];
@@ -111,17 +115,18 @@ namespace cckit
 		if (mpElems) {
 			if (mpElems->size() != MAX_NODE_SIZE) {
 				for (const auto& elem : *mpElems)
-					if (elem.second == _pt) return false;
+					if (elem.second == _pt) 
+						return false;// RET
 				mpElems->push_back(cckit::pair<value_type, point>(_val, _pt));
-				goto Proc0;
+				return true;// RET
 			}
 			else
 				Subdivide();
 		}
 		for (size_type i = 0; i < 4; ++i)
-			if (mpSubtrees[i]->insert(_val, _pt)) break;
-	Proc0:
-		return true;
+			if (mpSubtrees[i]->insert(_val, _pt)) 
+				break;
+		return true;// RET
 	}
 
 	template<typename T, size_t MaxNodeSize>
@@ -163,7 +168,8 @@ namespace cckit
 		while (!mpElems->empty()) {
 			for (size_type i = 0; i < 4; ++i) {
 				auto back = mpElems->back();
-				if (mpSubtrees[i]->insert(back.first, back.second)) break;
+				if (mpSubtrees[i]->insert(back.first, back.second)) 
+					break;
 			}
 			mpElems->pop_back();
 		}

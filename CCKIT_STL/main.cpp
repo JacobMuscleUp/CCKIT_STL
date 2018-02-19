@@ -18,6 +18,7 @@
 #include "CCKIT/experimental/maze_gen.h"
 #include "CCKIT/math/matrix.h"
 #include "CCKIT/spatial partitioning/quadtree.h"
+#include "CCKIT/spatial partitioning/kd_tree.h"
 #include <list>
 #include <string>
 #include <functional>
@@ -36,7 +37,7 @@ struct foo
 {
 	int mV0;
 	std::string mV1;
-
+	
 	foo()
 		: mV0(3), mV1("default")
 	{}
@@ -527,6 +528,18 @@ void test_quadtree()
 	});*/
 }
 
+void test_kd_tree()
+{
+	int pt0[3], pt1[3];
+
+	cckit::kd_tree<int, 3> tree0;
+	tree0.insert(pt0);
+	tree0.insert(pt1);
+	tree0.insert(pt1);
+	tree0.insert(pt1);
+	tree0.insert(pt1);
+}
+
 class A
 {
 public:
@@ -571,8 +584,8 @@ int main()
 {	
 	int temp;
 	
-	cout << cckit::mult(cckit::add(15, 23), 25) << endl;
-
+	//cout << cckit::mult(cckit::add(15, 23), 25) << endl;
+	
 	/*NSP deque<NSP pair<int, int>> vector0
 		= { NSP	make_pair(3, 3), NSP make_pair(1, 1), NSP make_pair(13, 13)
 		, NSP make_pair(9, 9), NSP make_pair(6, 6), NSP make_pair(12, 12) };
@@ -612,6 +625,7 @@ int main()
 	//test_mazegen();
 	//test_stack();
 	//test_queue();
+	test_kd_tree();
 
 	std::cin >> temp;
 	return 1;
