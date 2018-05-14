@@ -44,6 +44,7 @@
     <ClInclude Include="CCKIT\queue.h" />
     <ClInclude Include="CCKIT\random.h" />
     <ClInclude Include="CCKIT\set.h" />
+    <ClInclude Include="CCKIT\spatial partitioning\bvh.h" />
     <ClInclude Include="CCKIT\spatial partitioning\kd_tree.h" />
     <ClInclude Include="CCKIT\spatial partitioning\quadtree.h" />
     <ClInclude Include="CCKIT\stack.h" />

@@ -326,8 +326,9 @@ namespace cckit
 	template<typename InputIterator, typename Distance>
 	inline void Advance(InputIterator& _iter, Distance _dist, input_iterator_tag)
 	{
-		while (n--)
-			++_dist;
+		if (_dist <= 0) return;
+		while (_dist--)
+			++_iter;
 	}
 	template<typename BidirectionalIterator, typename Distance>
 	inline void Advance(BidirectionalIterator& _iter, Distance _dist, bidirectional_iterator_tag)

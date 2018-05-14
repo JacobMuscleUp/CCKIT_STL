@@ -129,6 +129,9 @@
     <ClInclude Include="CCKIT\spatial partitioning\kd_tree.h">
       <Filter>Header Files\CCKIT\spatial partitioning</Filter>
     </ClInclude>
+    <ClInclude Include="CCKIT\spatial partitioning\bvh.h">
+      <Filter>Header Files\CCKIT\spatial partitioning</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

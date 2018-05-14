@@ -17,8 +17,10 @@
 #include "CCKIT/experimental/csv_map.h"
 #include "CCKIT/experimental/maze_gen.h"
 #include "CCKIT/math/matrix.h"
+#include "CCKIT/math/arithmetic.h"
 #include "CCKIT/spatial partitioning/quadtree.h"
 #include "CCKIT/spatial partitioning/kd_tree.h"
+
 #include <list>
 #include <string>
 #include <functional>
@@ -32,6 +34,21 @@
 
 #include <iostream>
 using std::cout; using std::endl;
+//#define NSP ::std::
+#define NSP ::cckit::
+
+template<typename T, size_t Dim>
+void cout_array(T _arr[Dim]) {
+	for (size_t i = 0, iEnd = Dim - 1; i < iEnd; ++i)
+		cout << _arr[i] << ", ";
+	cout << _arr[Dim - 1] << endl;
+}
+
+void cout_array2(int _arr[2]) {
+	for (size_t i = 0, iEnd = 2 - 1; i < iEnd; ++i)
+		cout << _arr[i] << ", ";
+	cout << _arr[2 - 1] << endl;
+}
 
 struct foo
 {
@@ -216,33 +233,37 @@ void test_queue()
 void test_algorithm()
 {
 	cckit::list<int> v = { 3, 7, 1, 5, 2, 2, 2, 7, 7, 4 };
-	int a[] = { 3, 7, 1, 5, 2, 2, 2, 7, 7, 4, 6, 33 };
-	int b[] = { 8, 2 };
+	int a[] = { 3, 7, 1, 5, 2, 2, 2, 7, 37, 4, 6, 33 };
+	int b[] = { 2 };
 	int c[] = { 2, 5, 3 };
-	/*const auto arrSize = cckit::array_size(a);
-	for (size_t i = 0; i < arrSize; ++i) {
+
+	const auto sizeA = cckit::array_size(a);
+	for (size_t i = 0; i < sizeA; ++i) {
 		cout << a[i] << endl;
 	}
 	cout << endl;
 
-	cckit::selection_sort(v.begin(), v.end());
-	//cckit::insertion_sort(a, a + arrSize);
-	cckit::Heapsort(a);
-	for (size_t i = 0; i < arrSize; ++i) {
+	//cckit::selection_sort(v.begin(), v.end());
+	//cckit::selection_sort(a, a + sizeA);
+	//cckit::insertion_sort(a, a + sizeA);
+	cckit::quicksort(a, a + sizeA);
+	//cckit::Heapsort(a);
+	for (size_t i = 0; i < sizeA; ++i) {
 		cout << a[i] << endl;
 	}
-	cout << "min = " << *cckit::min_element(a, a + cckit::array_size(a)) << endl;
+	/*cout << "min = " << *cckit::min_element(a, a + cckit::array_size(a)) << endl;
 	cout << "max = " << *cckit::max_element(a, a + cckit::array_size(a)) << endl;
 	cout << endl;
 
 	for (auto i : v)
 		cout << i << endl;*/
 
-	const auto aSize = cckit::array_size(a);
-	auto head = cckit::adjacent_find(a, a + aSize, [](decltype(*a) _arg0, decltype(*a) _arg1) { return 33.0/6 * _arg0 ==  _arg1; });
-	cckit::for_each(head, a + aSize, [](const decltype(*head)& _arg) {
+	/*const auto sizeA = cckit::array_size(a);
+	auto head = cckit::search(a, a + sizeA, b, b + cckit::array_size(b));
+	//auto head = cckit::adjacent_find(a, a + aSize, [](decltype(*a) _arg0, decltype(*a) _arg1) { return 33.0/6 * _arg0 ==  _arg1; });
+	cckit::for_each(head, a + sizeA, [](const decltype(*head)& _arg) {
 		cout << _arg << endl;
-	});
+	});*/
 }
 
 void test_graph()
@@ -530,14 +551,76 @@ void test_quadtree()
 
 void test_kd_tree()
 {
-	int pt0[3], pt1[3];
-
-	cckit::kd_tree<int, 3> tree0;
+	int pt0[2]{ 1, 7 }
+		, pt1[2]{ 5, 11 }
+		, pt2[2]{ 15, 11 }
+		, pt3[2]{ 3, 1 }
+		, pt4[2]{ 6, 6 };
+	
+	cckit::kd_tree<int, 2> tree0;
 	tree0.insert(pt0);
 	tree0.insert(pt1);
-	tree0.insert(pt1);
-	tree0.insert(pt1);
-	tree0.insert(pt1);
+	tree0.insert(pt2);
+	tree0.insert(pt3);
+	tree0.insert(pt4);
+	
+	tree0.iterate([&tree0](decltype(tree0)::value_type _pt[decltype(tree0)::DIM]) {
+		for (size_t i = 0, iEnd = tree0.DIM; i < iEnd; ++i) {
+			if (i < iEnd - 1)
+				cout << _pt[i] << ", ";
+			else
+				cout << _pt[i];
+		}
+		cout << endl;
+	});
+
+	cout << endl;
+
+	int pt[]{ 15, 121 };
+	//cout_array2(tree0.nearest_neighbor(pt));
+	//cout << tree0.search(pt) << endl;
+}
+
+void test_arithmetic()
+{
+	cout << cckit::mult(cckit::add(15, 23), 25) << endl;
+}
+
+std::ostream& operator<<(std::ostream& _os, const NSP pair<int, int>& _arg)
+{
+	return _os << "(" << _arg.first << ", " << _arg.second << ")";
+}
+void test_heap()
+{
+	NSP deque<NSP pair<int, int>> vector0
+		= { NSP	make_pair(3, 3), NSP make_pair(1, 1), NSP make_pair(13, 13)
+		, NSP make_pair(9, 9), NSP make_pair(6, 6), NSP make_pair(12, 12) };
+	NSP	priority_queue<NSP pair<int, int> > heap1;
+	//cckit::binary_heap<cckit::pair<int, int> > heap1;
+	decltype(heap1) heap0(decltype(heap1)::value_compare(), vector0);
+	heap0.push(NSP make_pair(3, 3));
+	heap0.emplace(1, 1);
+
+	decltype(heap0) heap2 = cckit::move(heap0);
+	heap0.swap(heap2);
+	cckit::swap(heap0, heap2);
+	//heap2.modify(2, 13, 14);	
+
+	cout << "heap0" << endl;
+	for (; !heap0.empty(); cout << heap0.top() << " ", heap0.pop()) {}
+	cout << endl;
+	cout << "heap2" << endl;
+	for (; !heap2.empty(); cout << heap2.top() << " ", heap2.pop()) {}
+	cout << endl;
+
+	cout << "heap0" << endl;
+	for (decltype(heap0)::size_type i = 0; i < heap0.size(); ++i)
+		cout << heap0[i] << " ";
+	cout << endl << "is_heap = " << heap0.validate() << endl;
+	cout << "heap2" << endl;
+	for (decltype(heap2)::size_type i = 0; i < heap2.size(); ++i)
+		cout << heap2[i] << " ";
+	cout << endl << "is_heap = " << heap2.validate() << endl;
 }
 
 class A
@@ -572,63 +655,24 @@ public:
 	void func2(T&& _arg) { func1(cckit::forward<T>(_arg)); }
 };
 
-//#define NSP ::std::
-#define NSP ::cckit::
-
-std::ostream& operator<<(std::ostream& _os, const NSP pair<int, int>& _arg) 
-{
-	return _os << "(" << _arg.first << ", " << _arg.second << ")";
-}
-#include "CCKIT/math/arithmetic.h"
 int main()
 {	
-	int temp;
-	
-	//cout << cckit::mult(cckit::add(15, 23), 25) << endl;
-	
-	/*NSP deque<NSP pair<int, int>> vector0
-		= { NSP	make_pair(3, 3), NSP make_pair(1, 1), NSP make_pair(13, 13)
-		, NSP make_pair(9, 9), NSP make_pair(6, 6), NSP make_pair(12, 12) };
-	NSP	priority_queue<NSP pair<int, int> > heap1;
-	//cckit::binary_heap<cckit::pair<int, int> > heap1;
-	decltype(heap1) heap0(decltype(heap1)::value_compare(), vector0);
-	heap0.push(NSP make_pair(3, 3));
-	heap0.emplace(1, 1);
-
-	decltype(heap0) heap2 = cckit::move(heap0);
-	heap0.swap(heap2);
-	cckit::swap(heap0, heap2);
-	//heap2.modify(2, 13, 14);	
-
-	cout << "heap0" << endl;
-	for (; !heap0.empty(); cout << heap0.top() << " ", heap0.pop()) {}
-	cout << endl;
-	cout << "heap2" << endl;
-	for (; !heap2.empty(); cout << heap2.top() << " ", heap2.pop()) {}
-	cout << endl;*/
-
-	/*cout << "heap0" << endl;
-	for (decltype(heap0)::size_type i = 0; i < heap0.size(); ++i)
-		cout << heap0[i] << " ";
-	cout << endl << "is_heap = " << heap0.validate() << endl;
-	cout << "heap2" << endl;
-	for (decltype(heap2)::size_type i = 0; i < heap2.size(); ++i)
-		cout << heap2[i] << " ";
-	cout << endl << "is_heap = " << heap2.validate() << endl;*/
+	int iDummy;
 	
 	//test_deque();
 	//test_setmap();
 	//test_vector();
 	//test_graph();
-	//test_algorithm();
+	test_algorithm();
 	//test_list();
 	//test_mazegen();
 	//test_stack();
 	//test_queue();
-	test_kd_tree();
+	//test_kd_tree();
+	//test_arithmetic();
+	//test_heap();
 
-	std::cin >> temp;
-	return 1;
+	std::cin >> iDummy;
 }
 
 

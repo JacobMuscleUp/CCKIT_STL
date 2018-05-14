@@ -7,6 +7,7 @@
 #include "functional.h"
 #include "memory.h"
 #include "heap.h"
+#include "static_assert.h"
 
 namespace cckit
 {
@@ -133,10 +134,10 @@ namespace cckit
 		
 		ForwardIterator0 seqFirst = _last;
 		for (; _first != _last; ++_first) {
-			ForwardIterator0 seqFirst0 = cckit::search(_first, _last, _seqFirst, _seqLast, _pred);
-			if (seqFirst0 == _last)
+			_first = cckit::search(_first, _last, _seqFirst, _seqLast, _pred);
+			if (_first == _last)
 				return seqFirst;
-			_first = seqFirst = seqFirst0;
+			seqFirst = _first;
 		}
 		return seqFirst;
 	}
@@ -360,7 +361,45 @@ namespace cckit
 			return cckit::fill_n(_first, _count, _generator());
 		}
 #pragma endregion generate_n
+
+#pragma region iter_swap
+		template<typename ForwardIterator0, typename ForwardIterator1>
+		inline void iter_swap(ForwardIterator0 _it0, ForwardIterator1 _it1)
+		{
+			swap(*_it0, *_it1);
+		}
+#pragma endregion iter_swap
 	//! MODIFYING SEQUENCE OPERATION
+
+	// PARTITIONING OPERATION
+#pragma region partition
+		template<typename ForwardIterator, typename UnaryPredicate>
+		ForwardIterator partition(ForwardIterator _itFirst, ForwardIterator _itLast, UnaryPredicate _pred)
+		{
+			if ((_itFirst = find_if_not(_itFirst, _itLast, _pred)) != _itLast) {
+				for (ForwardIterator it = next(_itFirst); it != _itLast; ++it) 
+					if (_pred(*it)) 
+						iter_swap(it, _itFirst++);// _pred(*_itFirst) returns false
+			}
+			return _itFirst;
+		}
+		template<typename ForwardIterator>
+		void quicksort0(ForwardIterator _itFirst, ForwardIterator _itLast)
+		{
+			if (_itFirst != _itLast) {
+				//auto pivot = *next(_itFirst, distance(_itFirst, _itLast) / 2);
+				auto pivot = *_itFirst; 
+				ForwardIterator itMiddle0 = partition(_itFirst, _itLast
+					, [pivot](const auto& _val) { return _val < pivot; });
+				ForwardIterator itMiddle1 = partition(itMiddle0, _itLast
+					, [pivot](const auto& _val) { return !(pivot < _val); });
+
+				quicksort0(_itFirst, itMiddle0);
+				quicksort0(itMiddle1, _itLast);
+			}
+		}
+#pragma endregion partition
+	//! PARTITIONING OPERATION
 
 	// SORTING OPERATION
 #pragma region is_sorted
@@ -409,10 +448,11 @@ namespace cckit
 	void insertion_sort(BidirectionalIterator _first, BidirectionalIterator _last, StrictWeakOrdering _compare)
 	{
 		for (auto current = _first; ++current != _last;) {
-			remove_reference_t<decltype(*current)> key = *current;
+			typename iterator_traits<BidirectionalIterator>::value_type key = *current;
+			//remove_reference_t<decltype(*current)> key = *current;
 
-			BidirectionalIterator current0 = current, end = _first, next0;
-			for (--end; --current0 != end && _compare(key, *current0);)
+			BidirectionalIterator current0 = current, end0 = _first, next0;
+			for (--end0; --current0 != end0 && _compare(key, *current0);)
 				*(++(next0 = current0)) = *(current0);
 			*(++current0) = key;
 		}
@@ -499,7 +539,7 @@ namespace cckit
 		private:
 			static RandomAccessIterator Partition(RandomAccessIterator _first, RandomAccessIterator _last) {
 				auto pivot = _first;
-				auto end = _last; --end;
+				auto end = prev(_last);
 				for (auto current = _first; current != end; ++current)
 					if (!compare(*end, *current))
 						swap(*(pivot++), *current);
