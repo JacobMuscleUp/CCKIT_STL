@@ -869,7 +869,7 @@ namespace cckit
 	{
 		while (_first != _last)
 			_first = erase(_first);
-		return iterator(_last.mpNode);
+		return iterator(_first.mpNode);
 	}
 #pragma endregion list<T, Allocator>::erase
 
@@ -901,7 +901,7 @@ namespace cckit
 	template<typename T, typename Allocator>
 	inline void list<T, Allocator>::pop_back()
 	{
-		erase(--end());
+		erase(prev(cend()));
 	}
 #pragma endregion list<T, Allocator>::pop_back
 
@@ -943,8 +943,9 @@ namespace cckit
 		if (mSize < _count) 
 			insert(cend(), _count - mSize, _val);
 		else if (_count < mSize) {
-			while (_count < mSize)
-				erase(--end());
+			do {
+				pop_back();
+			} while (_count < mSize);
 		}
 	}
 	
@@ -972,21 +973,20 @@ namespace cckit
 	template<typename Compare>
 	inline void list<T, Allocator>::merge(this_type& _src, Compare _compare)
 	{
-		this_type temp;
+		this_type tmp;
 
-		while (this->mSize > 0 && _src.mSize > 0)
-		{
+		while (!this->empty() && !_src.empty()) {
 			if (_compare(this->front(), _src.front()))
-				temp.take_first(*this);
+				tmp.take_first(*this);
 			else
-				temp.take_first(_src);
+				tmp.take_first(_src);
 		}
-		while (this->mSize > 0)
-			temp.take_first(*this);
-		while (_src.mSize > 0)
-			temp.take_first(_src);
+		if (!this->empty())
+			tmp.absorb(*this);
+		else if (!_src.empty())
+			tmp.absorb(_src);
 
-		swap(temp);
+		swap(tmp);
 	}
 	template<typename T, typename Allocator>
 	template<typename Compare>
@@ -1015,9 +1015,8 @@ namespace cckit
 	inline void list<T, Allocator>::splice(const_iterator _next, this_type& _src, const_iterator _target)
 	{
 		if (this != &_src) {
-			iterator target0(_target.mpNode);
-			++target0;
-			const_cast<node_type*>(_next.mpNode)->Splice(const_cast<node_type*>(_target.mpNode), const_cast<node_type*>(target0.mpNode));
+			const_cast<node_type*>(_next.mpNode)->Splice(
+				const_cast<node_type*>(_target.mpNode), const_cast<node_type*>(_target.mpNode->mpNext));
 			++mSize;
 			--_src.mSize;
 		}
@@ -1047,7 +1046,7 @@ namespace cckit
 	{
 	#if CCKIT_DEBUG
 		assert(!_src.empty());
-		assert(_index0 < _src.size() && _index1 <= _src.size());
+		assert((_index0 < _src.size() && _index1 <= _src.size()));
 		assert(_index0 < _index1);
 	#endif
 		if (this != &_src) {
@@ -1081,15 +1080,13 @@ namespace cckit
 		list<T, Allocator>::remove_if(UnaryPredicate _pred)
 	{
 		size_type count = 0;
-
-		iterator last = end();
-		for (iterator current = begin(); current != last;) {
-			iterator prev = current;
-			++current;
-			if (_pred(*prev)) {
-				erase(prev);
+		for (iterator it = begin(), itEnd = end(); it != itEnd;) {
+			if (_pred(*it)) {
+				it = erase(it);
 				++count;
 			}
+			else
+				++it;
 		}
 		return count;
 	}
@@ -1146,15 +1143,15 @@ namespace cckit
 	void list<T, Allocator>::sort(Compare _compare)
 	{
 		if (this->mSize > 1) {
-			this_type half1, half2;
+			this_type half0, half1;
 
-			half1.absorb(*this);
-			half2.absorb(half1.truncate(half1.mSize / 2));
+			half0.absorb(*this);
+			half1.absorb(half0.truncate(half0.mSize / 2));
+			half0.sort(_compare);
 			half1.sort(_compare);
-			half2.sort(_compare);
 
-			half1.merge(half2, _compare);
-			absorb(half1);
+			half0.merge(half1, _compare);
+			absorb(half0);
 		}
 	}
 #pragma endregion list<T, Allocator>::sort
@@ -1248,10 +1245,9 @@ namespace cckit
 	void list<T, Allocator>::Assign(size_type _count, const value_type& _val)
 	{
 		node_type* pNode = mpSentinel->mpNext;
-		for (; (pNode != mpSentinel) && (_count > 0); --_count) {
+		for (; pNode != mpSentinel && _count > 0
+			; pNode = pNode->mpNext, --_count) 
 			pNode->mVal = _val;
-			pNode = pNode->mpNext;
-		}
 
 		if (pNode == mpSentinel)
 			Insert(pNode, _count, _val);
@@ -1264,10 +1260,9 @@ namespace cckit
 		void list<T, Allocator>::Assign(InputIterator _first, InputIterator _last)
 	{
 		node_type* pNode = mpSentinel->mpNext;
-		for (; (pNode != mpSentinel) && (_first != _last); ++_first) {
+		for (; pNode != mpSentinel && _first != _last
+			; pNode = pNode->mpNext, ++_first) 
 			pNode->mVal = *_first;
-			pNode = pNode->mpNext;
-		}
 
 		if (pNode != mpSentinel)
 			erase(const_iterator(pNode), cend());

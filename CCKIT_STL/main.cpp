@@ -140,48 +140,22 @@ void test_list()
 			list0.emplace_back(fooList[i].mV0, fooList[i].mV1);
 		}
 
-		cout << "list0.size() = " << list0.size() << endl;
 		cout << "INITIAL" << endl;
+		cout << "list0.size() = " << list0.size() << endl;
 		for (auto iter = list0.cbegin(); iter != list0.cend(); ++iter)
 			cout << *iter << endl;
-		cout << "AFTER SORT" << endl;
 
 		list0.sort(cckit::conditional_t<
 			cckit::is_same<list_type, cckit::list<list_type::value_type> >::value
 			, cckit::greater<list_type::value_type>
 			, cckit::less<list_type::value_type>
 		>());
-
-		for (auto iter = list0.cbegin(); iter != list0.cend(); ++iter)
-			cout << *iter << endl;
-
-		cout << "AFTER UNIQUE" << endl;
-		list0.unique();
-		for (auto iter = list0.cbegin(); iter != list0.cend(); ++iter)
-			cout << *iter << endl;
-
-		cout << "AFTER REMOVE 4" << endl;
-		list0.remove(foo(4, "7th"));
-		/*list0.remove_if([](list_type::const_reference _val) {
-			return _val.mV0 % 2 == 1;
-		});*/
-		for (auto iter = list0.cbegin(); iter != list0.cend(); ++iter)
-			cout << *iter << endl;
-
-		cout << "AFTER REVERSE" << endl;
-		list0.reverse();
-		for (auto iter = list0.cbegin(); iter != list0.cend(); ++iter)
-			cout << *iter << endl;
-
-		list_type list1 = cckit::move(list0);
-		cout << "AFTER MOVING list0" << endl;
-
+		list_type list1 = { foo(-2, "HERE"), foo(-12, "HERE"), foo(-15, "HERE") };
+		list0.splice(list0.cend(), list1);
+		list0.remove_if([&](const decltype(list0)::value_type& _val) { return _val.mV0 == -15 || _val.mV0 == -2; });
+		cout << "AFTER SORT" << endl;
 		cout << "list0.size() = " << list0.size() << endl;
 		for (auto iter = list0.cbegin(); iter != list0.cend(); ++iter)
-			cout << *iter << endl;
-		cout << endl;
-		cout << "list1.size() = " << list1.size() << endl;
-		for (auto iter = list1.cbegin(); iter != list1.cend(); ++iter)
 			cout << *iter << endl;
 	}
 }
@@ -663,8 +637,8 @@ int main()
 	//test_setmap();
 	//test_vector();
 	//test_graph();
-	test_algorithm();
-	//test_list();
+	//test_algorithm();
+	test_list();
 	//test_mazegen();
 	//test_stack();
 	//test_queue();

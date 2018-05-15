@@ -223,7 +223,7 @@ namespace cckit
 	{
 		class dummy {};
 		typedef conditional_t<is_void<From>::value, dummy, From> From0;
-		typedef conditional_t<is_void<From>::value, dummy, To> To0;
+		typedef conditional_t<is_void<To>::value, dummy, To> To0;
 
 		static detail::NoType Pimpl(...);
 		static detail::YesType Pimpl(To0);
