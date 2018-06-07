@@ -102,11 +102,15 @@ namespace cckit
 	public:
 		typedef avltree<Key, T, Compare, Allocator, ExtractKey, bMutableIterators, bUniqueKeys> this_type;
 		typedef Key key_type;
-		typedef conditional_t<is_same<ExtractKey, use_self<Key> >::value
+		typedef conditional_t<
+			is_same<ExtractKey, use_self<Key> >::value
 			, Key
-			, conditional_t<is_same<ExtractKey, use_first<pair<const Key, T> > >::value
-				, pair<const Key, T>
-				, void> > value_type;
+			, conditional_t<
+			is_same<ExtractKey, use_first<pair<const Key, T> > >::value
+			, pair<const Key, T>
+			, void
+			> 
+		> value_type;
 		typedef std::size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 		typedef Compare key_compare;

@@ -57,9 +57,9 @@ namespace cckit
 			return *this;
 		}
 		this_type operator++(int) {
-			this_type temp = *this;
+			this_type tmp = *this;
 			++*this;
-			return temp;
+			return tmp;
 		}
 
 		this_type& operator--() {
@@ -102,14 +102,14 @@ namespace cckit
 		}
 
 		this_type operator+(difference_type _offset) const {
-			this_type temp = *this;
-			temp += _offset;
-			return temp;
+			this_type tmp = *this;
+			tmp += _offset;
+			return tmp;
 		}
 		this_type operator-(difference_type _offset) const {
-			this_type temp = *this;
-			temp -= _offset;
-			return temp;
+			this_type tmp = *this;
+			tmp -= _offset;
+			return tmp;
 		}
 
 		operator iterator() const { return iterator(mpCurrent, mpCurrentBlockPtr); }

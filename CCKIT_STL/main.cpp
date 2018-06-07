@@ -44,12 +44,6 @@ void cout_array(T _arr[Dim]) {
 	cout << _arr[Dim - 1] << endl;
 }
 
-void cout_array2(int _arr[2]) {
-	for (size_t i = 0, iEnd = 2 - 1; i < iEnd; ++i)
-		cout << _arr[i] << ", ";
-	cout << _arr[2 - 1] << endl;
-}
-
 struct foo
 {
 	int mV0;
@@ -63,7 +57,7 @@ struct foo
 		: mV0(_v0), mV1(_v1)
 	{}
 
-	/*foo(const foo& _other)
+	foo(const foo& _other)
 		: mV0(_other.mV0)
 		, mV1(_other.mV1)
 	{}
@@ -78,7 +72,7 @@ struct foo
 		foo temp = _rhs;
 		cckit::swap(*this, temp);
 		return *this;
-	}*/
+	}
 };
 
 inline std::ostream& operator<<(std::ostream& _os, const foo& _a) noexcept
@@ -551,7 +545,6 @@ void test_kd_tree()
 	cout << endl;
 
 	int pt[]{ 15, 121 };
-	//cout_array2(tree0.nearest_neighbor(pt));
 	//cout << tree0.search(pt) << endl;
 }
 
@@ -629,6 +622,9 @@ public:
 	void func2(T&& _arg) { func1(cckit::forward<T>(_arg)); }
 };
 
+void demo_list();
+void demo_stack();
+
 int main()
 {	
 	int iDummy;
@@ -638,7 +634,7 @@ int main()
 	//test_vector();
 	//test_graph();
 	//test_algorithm();
-	test_list();
+	//test_list();
 	//test_mazegen();
 	//test_stack();
 	//test_queue();
@@ -646,28 +642,49 @@ int main()
 	//test_arithmetic();
 	//test_heap();
 
+	//demo_list();
+	demo_stack();
+
 	std::cin >> iDummy;
 }
 
-
-/*void(*pFunc0)();
-
-template<typename Tret, typename T>
-Tret RunLambdaPtr(T* v) {
-	return (Tret)(*v)();
-}
-template<typename Tret = void, typename Tfp = Tret(*)(), typename T>
-Tfp LambdaPrt(T&) {
-	return (Tfp)RunLambdaPtr<Tret, T>;
-}
-
-void EXPERIMENTAL()
+void demo_list()
 {
-	auto pLambda0 = [list2]() {
-		cout << endl;
-		cout << "list2::operator[]" << endl;
-		for (list_type::size_type i = 0; i < list2.size(); ++i)
-			cout << list2[i] << endl;
-	};
-	pFunc0 = LambdaPrt(pLambda0);
-}*/
+	cckit::list<foo> list0;
+	list0.insert(list0.cend(), { foo(3, "3rd"), foo(4, "4th") });
+	list0.insert(list0.cbegin(), { foo(1, "1st"), foo(2, "2nd") });
+	list0.push_back(foo(5, "5th"));
+	list0.emplace(list0.end(), 5, "5th");
+	list0.emplace_front(0, "0th");
+
+	//list0.sort(cckit::greater<foo>());
+	//list0.reverse();
+	//list0.unique();
+
+	decltype(list0) list1 = { foo(10, "10th"), foo(11, "11th") };
+
+	//list0.splice(list0.cend(), list1);
+	//list1 = cckit::move(list0);
+	
+	cout << "list0: " << endl;
+	for (foo& elem : list0)
+		cout << elem << endl;
+
+	cout << endl;
+
+	cout << "list1: " << endl;
+	for (foo& elem : list1)
+		cout << elem << endl;
+}
+
+void demo_stack()
+{
+	cckit::stack<float> stack0;
+	//cckit::stack<float, cckit::vector<float> > stack0;
+	//cckit::stack<float, cckit::deque<float> > stack0;
+	stack0.push(3.0f);
+	stack0.emplace(2.0f);
+	stack0.push(1.0f);
+	for (; !stack0.empty(); stack0.pop()) 
+		cout << stack0.top() << endl;
+}

@@ -1096,13 +1096,12 @@ namespace cckit
 	template<typename T, typename Allocator>
 	inline void list<T, Allocator>::reverse()
 	{
-		this_type temp;
+		this_type tmp;
 		while (!empty()) {
-			value_type val = cckit::move(back());
-			temp.push_back(cckit::move(val));
+			tmp.push_back(cckit::move(back()));
 			pop_back();
 		}
-		absorb(temp);
+		absorb(tmp);
 	}
 #pragma endregion list<T, Allocator>::reverse
 
