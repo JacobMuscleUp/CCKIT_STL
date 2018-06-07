@@ -22,6 +22,12 @@ namespace cckit
 	bool operator!=(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _lhs
 		, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _rhs);
 	template<typename U, typename Pointer0, typename Reference0, typename Pointer1, typename Reference1, cckit_size_t BlockSize0>
+	bool operator<(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _lhs
+		, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _rhs);
+	template<typename U, typename Pointer0, typename Reference0, typename Pointer1, typename Reference1, cckit_size_t BlockSize0>
+	bool operator>(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _lhs
+		, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _rhs);
+	template<typename U, typename Pointer0, typename Reference0, typename Pointer1, typename Reference1, cckit_size_t BlockSize0>
 	cckit_ptrdiff_t operator-(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _arg0
 		, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _arg1);
 	
@@ -122,6 +128,12 @@ namespace cckit
 		friend bool operator!= <>(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _lhs
 			, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _rhs);
 		template<typename U, typename Pointer0, typename Reference0, typename Pointer1, typename Reference1, cckit_size_t BlockSize0>
+		friend bool operator< <>(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _lhs
+			, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _rhs);
+		template<typename U, typename Pointer0, typename Reference0, typename Pointer1, typename Reference1, cckit_size_t BlockSize0>
+		friend bool operator> <>(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _lhs
+			, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _rhs);
+		template<typename U, typename Pointer0, typename Reference0, typename Pointer1, typename Reference1, cckit_size_t BlockSize0>
 		friend cckit_ptrdiff_t operator-(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _arg0
 			, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _arg1);
 
@@ -143,6 +155,17 @@ namespace cckit
 	bool operator!=(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _lhs
 		, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _rhs) {
 		return _lhs.mpCurrent != _rhs.mpCurrent;
+	}
+	template<typename U, typename Pointer0, typename Reference0, typename Pointer1, typename Reference1, cckit_size_t BlockSize0>
+	bool operator<(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _lhs
+		, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _rhs) {
+		return _lhs.mpCurrentBlockPtr < _rhs.mpCurrentBlockPtr 
+			|| (_lhs.mpCurrentBlockPtr == _rhs.mpCurrentBlockPtr && _lhs.mpCurrent < _rhs.mpCurrent);
+	}
+	template<typename U, typename Pointer0, typename Reference0, typename Pointer1, typename Reference1, cckit_size_t BlockSize0>
+	bool operator>(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _lhs
+		, const BlockMapIterator<U, Pointer1, Reference1, BlockSize0>& _rhs) {
+		return _rhs < _lhs;
 	}
 	template<typename U, typename Pointer0, typename Reference0, typename Pointer1, typename Reference1, cckit_size_t BlockSize0>
 	cckit_ptrdiff_t operator-(const BlockMapIterator<U, Pointer0, Reference0, BlockSize0>& _arg0

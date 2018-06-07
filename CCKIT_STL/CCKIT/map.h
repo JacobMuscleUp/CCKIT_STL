@@ -8,7 +8,7 @@ namespace cckit
 {
 	template<typename Key, typename T, typename Compare = less<Key>, typename Allocator = allocator
 		, typename DataStructure = avltree<Key, T, Compare, Allocator, use_first<pair<const Key, T> >, true, true> >
-	class map : public DataStructure
+		class map : public DataStructure
 	{
 	private:
 		typedef map<Key, T, Compare, Allocator, DataStructure> this_type;
@@ -66,7 +66,7 @@ namespace cckit
 		{
 			key_type key = cckit::arg_at<0>(cckit::forward<Args>(_args)...);
 			iterator lowerBound = lower_bound(key);
-			if (lowerBound == end() || key_comp()(key, lowerBound->first)) 
+			if (lowerBound == end() || key_comp()(key, lowerBound->first))
 				return pair<iterator, bool>(emplace_hint(lowerBound, cckit::forward<Args>(_args)...), true);
 			return pair<iterator, bool>(lowerBound, false);
 		}
@@ -98,7 +98,7 @@ namespace cckit
 
 	template<typename Key, typename T, typename Compare = less<Key>, typename Allocator = allocator
 		, typename DataStructure = avltree<Key, T, Compare, Allocator, use_first<pair<const Key, T> >, true, false> >
-	class multimap : public DataStructure
+		class multimap : public DataStructure
 	{
 	private:
 		typedef multimap<Key, T, Compare, Allocator, DataStructure> this_type;
@@ -158,14 +158,14 @@ namespace cckit
 #pragma region map<Key, T, Compare, Allocator, DataStructure>
 	/*template<typename Key, typename T, typename Compare, typename Allocator, typename DataStructure>
 	map<Key, T, Compare, Allocator, DataStructure>::map(const key_compare& _compare, const allocator_type& _allocator)
-		: base_type(_compare, _allocator)
+	: base_type(_compare, _allocator)
 	{}*/
 #pragma endregion map<Key, T, Compare, Allocator, DataStructure>
 
 #pragma region multimap<Key, T, Compare, Allocator, DataStructure>
 	/*template<typename Key, typename T, typename Compare, typename Allocator, typename DataStructure>
 	multimap<Key, T, Compare, Allocator, DataStructure>::multimap(const key_compare& _compare, const allocator_type& _allocator)
-		: base_type(_compare, _allocator)
+	: base_type(_compare, _allocator)
 	{}*/
 #pragma endregion multimap<Key, T, Compare, Allocator, DataStructure>
 }

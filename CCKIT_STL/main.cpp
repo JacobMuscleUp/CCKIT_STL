@@ -418,18 +418,25 @@ void test_matrix()
 	{ { 1, 0, 2 }
 	, { 2, 1, 1 }
 	, { 0, 12, 1 } };
-
-	auto inverseMat = mat.inverse_gauss_jordan_elimination();
-	auto multMat = cckit::multiply(mat, inverseMat);
-	for (int i = 0; i < multMat.ROW; ++i, cout << endl)
-	for (int j = 0; j < multMat.COL; ++j) {
-	multMat[i][j] = ((cckit::abs(multMat[i][j]) < .001) ? 0 : multMat[i][j]);
-	cout << multMat[i][j] << " ";
+	for (int i = 0; i < mat.ROW; ++i, cout << endl) {
+		for (int j = 0; j < mat.COL; ++j) {
+			mat[i][j] = ((cckit::abs(mat[i][j]) < .001) ? 0 : mat[i][j]);
+			cout << mat[i][j] << " ";
+		}
 	}
 	cout << endl;
 
-	cout << cckit::determinant(mat) << endl;
-	cout << cckit::determinant(mat) << endl;
+	auto inverseMat = mat.inverse_gauss_jordan_elimination();
+	auto multMat = cckit::multiply(mat, inverseMat);
+	for (int i = 0; i < multMat.ROW; ++i, cout << endl) {
+		for (int j = 0; j < multMat.COL; ++j) {
+			multMat[i][j] = ((cckit::abs(multMat[i][j]) < .001) ? 0 : multMat[i][j]);
+			cout << multMat[i][j] << " ";
+		}
+	}
+	cout << endl;
+
+	//cout << cckit::determinant(mat) << endl;
 }
 
 void test_deque()
@@ -624,6 +631,10 @@ public:
 
 void demo_list();
 void demo_stack();
+void demo_deque();
+void demo_pqueue();
+void demo_map();
+void demo_sort();
 
 int main()
 {	
@@ -641,9 +652,14 @@ int main()
 	//test_kd_tree();
 	//test_arithmetic();
 	//test_heap();
+	test_matrix();
 
 	//demo_list();
-	demo_stack();
+	//demo_stack();
+	//demo_deque();
+	//demo_pqueue();
+	//demo_map();
+	//demo_sort();
 
 	std::cin >> iDummy;
 }
@@ -687,4 +703,58 @@ void demo_stack()
 	stack0.push(1.0f);
 	for (; !stack0.empty(); stack0.pop()) 
 		cout << stack0.top() << endl;
+}
+
+void demo_deque()
+{
+	cckit::deque<int> deque0 = { 32, 1, 3, 14, 35, 2 };
+	cckit::make_heap(deque0.begin(), deque0.end());
+	cckit::sort_heap(deque0.begin(), deque0.end());
+	cout << "deque:" << endl;
+	for (auto it = deque0.begin(); it != deque0.end(); ++it)
+		cout << *it << endl;
+}
+
+void demo_pqueue()
+{
+	cckit::priority_queue<int> pqueue0;
+	//cckit::priority_queue<int, cckit::vector<int>, cckit::greater<int> > pqueue0;
+	pqueue0.push(5);
+	pqueue0.emplace(1);
+	pqueue0.push(11);
+	pqueue0.push(8);
+
+	cout << "priority_queue:" << endl;
+	for (; !pqueue0.empty(); pqueue0.pop())
+		cout << pqueue0.top() << endl;
+}
+
+void demo_map()
+{
+	cckit::map<int, const char*> map0;
+	map0[1] = "1st";
+	map0[-11] = "-11th";
+	map0[-3] = "-3rd";
+	
+	cout << "map:" << endl;
+	for (auto& pair : map0)
+		cout << pair.first << endl;
+}
+
+void demo_sort()
+{
+	cckit::deque<int> deque0 = { 3, 1, -1, 23, 22, 10 };
+	int array0[] { 3, 1, -1, 23, 22, 10 };
+	cckit::quicksort(deque0.cbegin(), deque0.cend());
+	cckit::quicksort(array0, array0 + cckit::array_size(array0));
+	//cckit::heapsort(deque0.cbegin(), deque0.cend());
+	//cckit::heapsort(array0, array0 + cckit::array_size(array0));
+
+	cout << "deque:" << endl;
+	for (auto elem : deque0)
+		cout << elem << endl;
+	cout << endl;
+	cout << "array:" << endl;
+	for (auto elem : array0)
+		cout << elem << endl;
 }

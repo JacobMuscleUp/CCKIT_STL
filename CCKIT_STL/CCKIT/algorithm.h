@@ -593,6 +593,18 @@ namespace cckit
 #pragma endregion quicksort
 	
 #pragma region heapsort
+	template<typename RandomAccessIterator>
+	inline void heapsort(RandomAccessIterator _first, RandomAccessIterator _last)
+	{
+		cckit::heapsort(_first, _last, less<decltype(*_first)>());
+	}
+	template<typename RandomAccessIterator, typename StrictWeakOrdering>
+	void heapsort(RandomAccessIterator _first, RandomAccessIterator _last, StrictWeakOrdering _compare)
+	{
+		make_heap(_first, _last, _compare);
+		sort_heap(_first, _last, _compare);
+	}
+
 	template<typename T, size_t N>
 	void Heapsort(T(&_arr)[N])
 	{
